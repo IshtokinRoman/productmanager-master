@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Продуктовый консультант</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1d2145;--page:#edf1f7;--card:#fff;--line:#d8e0ec;--muted:#566083;--lime:#d4f04f;--radish:#cf2e66;
+--display:"Unbounded","Montserrat",system-ui,sans-serif;--body:"Onest",system-ui,"Segoe UI",sans-serif}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--page);color:var(--ink);font:400 1rem/1.55 var(--body)}
+h1,h2,h3{font-family:var(--display);font-weight:600;letter-spacing:-.02em;line-height:1.15;margin:0}
+h1{font-size:clamp(1.8rem,1rem+2.6vw,2.9rem)}h2{font-size:1.3rem}h3{font-size:1rem}
+p{margin:0}.muted{color:var(--muted)}.small{font-size:.875rem}
+:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+button{font:inherit;cursor:pointer}
+.logo{display:flex;align-items:center;gap:.6rem;font:600 .95rem var(--display);letter-spacing:-.02em}
+.logo svg{width:30px;height:30px;flex:none}
+
+/* auth */
+.auth{min-height:100vh;display:grid;grid-template-columns:5fr 6fr}
+.hero{background:var(--ink);color:#fff;padding:clamp(1.5rem,4vw,3.5rem);display:flex;flex-direction:column;justify-content:space-between;gap:2.5rem}
+.hero .logo{color:#fff}
+.hero p.lead{max-width:34ch;color:#c9cfee;margin-top:1.1rem}
+.sample{background:#fff;color:var(--ink);border-radius:18px;padding:1.1rem 1.25rem;max-width:23rem;box-shadow:0 18px 40px rgba(0,0,0,.28);animation:rise .9s cubic-bezier(.2,.8,.2,1) both}
+@keyframes rise{from{transform:translateY(40px) rotate(-3deg);opacity:0}to{transform:none;opacity:1}}
+.sample h3{margin-bottom:.6rem}
+.row{display:flex;justify-content:space-between;gap:1rem;padding:.45rem 0;border-top:1px solid var(--line)}
+.row span:last-child{font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
+.panel{display:flex;align-items:center;justify-content:center;padding:2rem 1.25rem}
+.panel>div{width:100%;max-width:30rem}
+.tabs{display:inline-flex;background:#dfe6f1;border-radius:12px;padding:4px;margin-bottom:1.5rem}
+.tabs button{border:0;background:none;padding:.55rem 1.2rem;border-radius:9px;color:var(--muted);font-weight:500}
+.tabs button[aria-selected=true]{background:var(--lime);color:var(--ink)}
+form.stack{display:grid;gap:1.1rem}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+label.f,fieldset{display:grid;gap:.35rem;font-weight:500;font-size:.9rem;border:0;padding:0;margin:0;min-width:0}
+legend{padding:0;margin-bottom:.35rem;font-weight:500;font-size:.9rem}
+input[type=number],input[type=date],input[type=text],input[type=email],select{width:100%;font:inherit;color:inherit;background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:.65rem .8rem}
+input:focus,select:focus{border-color:var(--ink);outline:none;box-shadow:0 0 0 3px #d4f04f99}
+.seg{display:flex;gap:4px;background:#dfe6f1;border-radius:12px;padding:4px}
+.seg label{flex:1;position:relative}
+.seg input{position:absolute;opacity:0;inset:0}
+.seg span{display:block;text-align:center;padding:.5rem .4rem;border-radius:9px;font-weight:500;font-size:.9rem;color:var(--muted);cursor:pointer}
+.seg input:checked+span{background:var(--lime);color:var(--ink)}
+.seg input:focus-visible+span{outline:3px solid var(--ink);outline-offset:1px}
+.btn{border:0;background:var(--ink);color:#fff;font-weight:600;padding:.85rem 1.4rem;border-radius:999px;display:inline-flex;gap:.6rem;align-items:center;justify-content:center}
+.btn:hover{background:#2c3270}.btn[disabled]{opacity:.7;cursor:wait}
+.btn.ghost{background:none;color:var(--ink);border:1.5px solid var(--line);padding:.45rem 1rem;font-weight:500}
+.btn.ghost:hover{border-color:var(--ink);background:none}
+.err{color:var(--radish);font-size:.9rem;font-weight:500;min-height:0}
+.spin{width:1rem;height:1rem;border:2px solid #fff6;border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* app */
+.top{display:flex;justify-content:space-between;align-items:center;padding:1rem clamp(1rem,3vw,2.5rem);background:var(--card);border-bottom:1px solid var(--line)}
+.who{display:flex;gap:.8rem;align-items:center}
+.layout{display:grid;grid-template-columns:21rem minmax(0,1fr);gap:1.5rem;padding:1.5rem clamp(1rem,3vw,2.5rem);max-width:78rem;margin:0 auto;align-items:start}
+.card{background:var(--card);border-radius:18px;padding:1.25rem;border:1px solid var(--line)}
+aside{display:grid;gap:1.25rem}
+dl{display:grid;grid-template-columns:auto 1fr;gap:.35rem 1rem;margin:.9rem 0 0}
+dt{color:var(--muted)}dd{margin:0;text-align:right;font-weight:500;overflow-wrap:anywhere}
+.step{display:flex;align-items:center;justify-content:space-between;border:1.5px solid var(--line);border-radius:12px;padding:.3rem}
+.step button{width:2.4rem;height:2.4rem;border:0;border-radius:9px;background:#dfe6f1;font-size:1.2rem;color:var(--ink)}
+.step output{font-weight:600;font-size:1.05rem}
+.empty{padding:3rem 1.5rem;text-align:center;border:2px dashed var(--line);border-radius:18px;color:var(--muted)}
+.empty h2{color:var(--ink);margin-bottom:.6rem}
+.empty p{max-width:36ch;margin:0 auto}
+.head{display:flex;justify-content:space-between;align-items:end;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+.days{display:flex;gap:.4rem;overflow-x:auto;padding-bottom:.4rem;margin-bottom:1rem}
+.days button{border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:.45rem 1rem;white-space:nowrap;font-weight:500;color:var(--muted)}
+.days button[aria-pressed=true]{background:var(--lime);border-color:var(--lime);color:var(--ink)}
+details.meal{border-top:1px solid var(--line)}
+details.meal:first-child{border-top:0}
+summary{list-style:none;display:grid;grid-template-columns:8rem 1fr auto 1rem;gap:1rem;align-items:center;padding:.9rem .25rem;cursor:pointer}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"";width:.55rem;height:.55rem;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s}
+details[open] summary::after{transform:rotate(-135deg)}
+.kind{color:var(--muted);font-size:.9rem}
+.dish{font-weight:600}
+.kcal{text-align:right;font-variant-numeric:tabular-nums;font-weight:500;white-space:nowrap}
+.kcal small{display:block;color:var(--muted);font-weight:400}
+ul.ing{list-style:none;margin:0;padding:0 .25rem 1rem 9.25rem;display:grid;gap:.2rem;color:var(--muted);font-size:.9rem}
+ul.ing li{display:flex;justify-content:space-between;gap:1rem;max-width:24rem}
+.total{display:flex;justify-content:space-between;margin-top:.5rem;padding:.9rem 1rem;background:var(--ink);color:#fff;border-radius:12px;font-weight:600}
+.plans{list-style:none;margin:.8rem 0 0;padding:0;display:grid;gap:.4rem}
+.plans li{display:flex;gap:.4rem;align-items:stretch}
+.plans .open{flex:1;text-align:left;border:1.5px solid var(--line);background:var(--card);border-radius:12px;padding:.55rem .8rem;color:var(--ink);font-weight:500}
+.plans .open small{display:block;color:var(--muted);font-weight:400}
+.plans .open[aria-current=true]{background:var(--lime);border-color:var(--lime)}
+.plans .del{width:2.5rem;border:1.5px solid var(--line);background:var(--card);border-radius:12px;color:var(--muted);font-size:1.2rem}
+.plans .del:hover{border-color:var(--radish);color:var(--radish)}
+#basket{margin-top:1rem}
+#basket .cat{margin:1.1rem 0 .2rem;font:600 .9rem var(--body);color:var(--muted)}
+.item{display:flex;gap:.7rem;align-items:center;padding:.5rem .25rem;border-top:1px solid var(--line);cursor:pointer}
+.item input{width:1.15rem;height:1.15rem;accent-color:var(--ink);flex:none}
+.item .nm{flex:1}
+.item .g{font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
+.item.done .nm{text-decoration:line-through;color:var(--muted)}
+.actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem}
+#toast{position:fixed;left:50%;bottom:1.5rem;transform:translate(-50%,2rem);background:var(--ink);color:#fff;padding:.8rem 1.2rem;border-radius:12px;max-width:min(90vw,32rem);opacity:0;pointer-events:none;transition:.25s;z-index:9}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+@media (max-width:860px){
+ .auth{grid-template-columns:1fr}.hero{gap:1.5rem}.sample{display:none}
+ .layout{grid-template-columns:1fr}
+ summary{grid-template-columns:1fr auto 1rem}.kind{grid-column:1/-1;margin-bottom:-.7rem}
+ ul.ing{padding-left:.25rem}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<main id="auth" class="auth">
+  <section class="hero">
+    <div class="logo"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="16" fill="#d4f04f"/><path d="M9 22c0-8 4-13 14-13 0 9-5 13-14 13zM9 22l8-8" fill="none" stroke="#1d2145" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Продуктовый консультант</div>
+    <div>
+      <h1>Меню под ваши калории на любое число дней</h1>
+      <p class="lead">Укажите рост, вес и привычную активность. Мы подберём блюда на каждый приём пищи и посчитаем калории.</p>
+    </div>
+    <div class="sample" aria-hidden="true">
+      <h3>Пример: день 1</h3>
+      <div class="row"><span>Овсянка с бананом</span><span>570 ккал</span></div>
+      <div class="row"><span>Курица с рисом</span><span>785 ккал</span></div>
+      <div class="row"><span>Лосось с картофелем</span><span>686 ккал</span></div>
+    </div>
+  </section>
+
+  <section class="panel"><div>
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="tab-reg" aria-selected="true">Регистрация</button>
+      <button type="button" role="tab" id="tab-login" aria-selected="false">Вход</button>
+    </div>
+
+    <form id="reg" class="stack" novalidate>
+      <div class="two">
+        <label class="f">Имя<input type="text" name="firstName" autocomplete="given-name" maxlength="100" required></label>
+        <label class="f">Фамилия<input type="text" name="lastName" autocomplete="family-name" maxlength="100" required></label>
+      </div>
+      <label class="f">Email<input type="email" name="email" autocomplete="email" maxlength="255" required></label>
+      <div class="two">
+        <label class="f">Рост, см<input type="number" name="height" min="100" max="250" step="0.1" required></label>
+        <label class="f">Вес, кг<input type="number" name="weight" min="30" max="300" step="0.1" required></label>
+      </div>
+      <label class="f">Дата рождения<input type="date" name="birthday" required></label>
+      <fieldset><legend>Пол</legend>
+        <div class="seg">
+          <label><input type="radio" name="gender" value="MALE" checked><span>Мужской</span></label>
+          <label><input type="radio" name="gender" value="FEMALE"><span>Женский</span></label>
+        </div>
+      </fieldset>
+      <label class="f">Активность
+        <select name="activityLevel">
+          <option value="LOW">Низкая: тренировки 1–3 раза в неделю</option>
+          <option value="MODERATE" selected>Средняя: 3–5 раз в неделю</option>
+          <option value="HIGH">Высокая: 6–7 раз в неделю</option>
+          <option value="VERY_HIGH">Очень высокая: тяжёлый труд или две тренировки в день</option>
+        </select>
+      </label>
+      <fieldset><legend>Цель</legend>
+        <div class="seg">
+          <label><input type="radio" name="goal" value="WEIGHT_LOSS"><span>Похудеть</span></label>
+          <label><input type="radio" name="goal" value="MAINTENANCE" checked><span>Держать вес</span></label>
+          <label><input type="radio" name="goal" value="WEIGHT_GAIN"><span>Набрать</span></label>
+        </div>
+      </fieldset>
+      <p class="err" role="alert"></p>
+      <button class="btn" type="submit">Создать профиль</button>
+    </form>
+
+    <form id="login" class="stack" hidden novalidate>
+      <label class="f">Email<input type="email" name="email" autocomplete="email" maxlength="255" required></label>
+      <p class="muted small">Пароля пока нет: профиль открывается по email, указанному при регистрации.</p>
+      <p class="err" role="alert"></p>
+      <button class="btn" type="submit">Войти</button>
+    </form>
+  </div></section>
+</main>
+
+<div id="app" hidden>
+  <header class="top">
+    <div class="logo"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="16" fill="#d4f04f"/><path d="M9 22c0-8 4-13 14-13 0 9-5 13-14 13zM9 22l8-8" fill="none" stroke="#1d2145" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Продуктовый консультант</div>
+    <div class="who"><span id="who" class="muted small"></span><button class="btn ghost" id="logout" type="button">Выйти</button></div>
+  </header>
+  <div class="layout">
+    <aside>
+      <section class="card">
+        <h2>Ваш профиль</h2>
+        <dl id="profile"></dl>
+      </section>
+      <section class="card">
+        <h2>Новый план</h2>
+        <form id="gen" class="stack" style="margin-top:1rem" novalidate>
+          <fieldset><legend>Сколько дней</legend>
+            <div class="step"><button type="button" id="dec" aria-label="Меньше дней">−</button><output id="days" aria-live="polite">3</output><button type="button" id="inc" aria-label="Больше дней">+</button></div>
+          </fieldset>
+          <fieldset><legend>Приёмов пищи в день</legend>
+            <div class="seg">
+              <label><input type="radio" name="meals" value="3"><span>3</span></label>
+              <label><input type="radio" name="meals" value="4" checked><span>4</span></label>
+              <label><input type="radio" name="meals" value="5"><span>5</span></label>
+            </div>
+          </fieldset>
+          <p class="err" role="alert"></p>
+          <button class="btn" type="submit">Составить план</button>
+        </form>
+      </section>
+      <section class="card">
+        <h2>Мои планы</h2>
+        <ul id="plans" class="plans"></ul>
+      </section>
+    </aside>
+    <section id="result" aria-live="polite"></section>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const API = location.protocol === 'file:' ? 'http://localhost:8080' : ''; // страницу лучше отдавать самим приложением
+const $ = s => document.querySelector(s);
+const fmt = new Intl.NumberFormat('ru-RU', {maximumFractionDigits: 0});
+const fmt1 = new Intl.NumberFormat('ru-RU', {minimumFractionDigits: 1, maximumFractionDigits: 1});
+const ORDER = ['BREAKFAST', 'SNACK', 'LUNCH', 'DINNER', 'SECOND_SNACK'];
+const MEAL = {BREAKFAST: 'Завтрак', SNACK: 'Перекус', LUNCH: 'Обед', DINNER: 'Ужин', SECOND_SNACK: 'Поздний перекус'};
+const GOAL = {WEIGHT_LOSS: 'Похудеть', MAINTENANCE: 'Держать вес', WEIGHT_GAIN: 'Набрать'};
+const ACT = {LOW: 'Низкая', MODERATE: 'Средняя', HIGH: 'Высокая', VERY_HIGH: 'Очень высокая'};
+const state = {profile: null, plan: null, basket: null, dishes: new Map(), day: 1, days: 3};
+const store = {
+  get: k => { try { return localStorage.getItem(k); } catch { return null; } },
+  set: (k, v) => { try { localStorage.setItem(k, v); } catch {} },
+  del: k => { try { localStorage.removeItem(k); } catch {} }
+};
+
+function h(tag, props, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (k === 'class') e.className = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else e.setAttribute(k, v);
+  }
+  e.append(...kids.flat().filter(x => x != null));
+  return e;
+}
+
+function explain(status, d) {
+  const detail = (d && (d.detail || d.message)) || '';
+  const m = /No dishes for meal type (\w+)/.exec(detail);
+  if (m) return `В каталоге нет блюд для приёма «${MEAL[m[1]] || m[1]}». Добавьте такие блюда и повторите.`;
+  if (status === 400) return 'Проверьте введённые данные: все поля должны быть заполнены корректно.';
+  if (status === 404) return 'Не найдено.';
+  if (status === 409) return /email/i.test(detail) ? 'Этот email уже зарегистрирован. Перейдите на вкладку «Вход».' : 'Запись не сохранена: база данных отклонила данные.';
+  if (status >= 500) return 'Ошибка на сервере. Подробности смотрите в логе приложения.';
+  return detail || 'Не удалось выполнить запрос.';
+}
+
+async function api(path, opts = {}) {
+  let res;
+  try {
+    res = await fetch(API + path, {...opts, headers: {Accept: 'application/json', ...(opts.body ? {'Content-Type': 'application/json'} : {})}});
+  } catch {
+    throw new Error('Сервер не отвечает. Запустите приложение и откройте страницу по адресу http://localhost:8080');
+  }
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch {}
+  if (!res.ok) { const e = new Error(explain(res.status, data)); e.status = res.status; throw e; }
+  return data;
+}
+
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg; t.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('on'), 5000);
+}
+
+async function run(form, fn) {
+  const btn = form.querySelector('button[type=submit]'), err = form.querySelector('.err'), label = btn.textContent;
+  err.textContent = ''; btn.disabled = true; btn.replaceChildren(h('span', {class: 'spin'}), 'Подождите…');
+  try { await fn(); } catch (e) { err.textContent = e.message; }
+  finally { btn.disabled = false; btn.textContent = label; }
+}
+
+/* вкладки */
+function tab(reg) {
+  $('#tab-reg').setAttribute('aria-selected', reg); $('#tab-login').setAttribute('aria-selected', !reg);
+  $('#reg').hidden = !reg; $('#login').hidden = reg;
+}
+$('#tab-reg').onclick = () => tab(true);
+$('#tab-login').onclick = () => tab(false);
+
+/* вход и выход */
+function enter(p) {
+  state.profile = p; store.set('pc.id', p.id);
+  $('#who').textContent = `${p.firstName} ${p.lastName}`;
+  $('#profile').replaceChildren(...[
+    ['Имя', `${p.firstName} ${p.lastName}`], ['Email', p.email], ['Возраст', `${p.age} лет`], ['Рост', `${fmt.format(p.height)} см`], ['Вес', `${fmt1.format(p.weight)} кг`],
+    ['Активность', ACT[p.activityLevel] || '—'], ['Цель', GOAL[p.goal] || '—']
+  ].flatMap(([k, v]) => [h('dt', {}, k), h('dd', {}, v)]));
+  $('#auth').hidden = true; $('#app').hidden = false;
+  state.plan = null; renderResult(); loadPlans();
+}
+$('#logout').onclick = () => { store.del('pc.id'); state.profile = null; $('#app').hidden = true; $('#auth').hidden = false; tab(false); };
+
+$('#reg').addEventListener('submit', e => {
+  e.preventDefault();
+  const f = e.target, fd = new FormData(f);
+  const body = {firstName: String(fd.get('firstName')).trim(), lastName: String(fd.get('lastName')).trim(),
+    email: String(fd.get('email')).trim(), height: +fd.get('height'), weight: +fd.get('weight'), birthday: fd.get('birthday'),
+    gender: fd.get('gender'), activityLevel: fd.get('activityLevel'), goal: fd.get('goal')};
+  run(f, async () => {
+    if (!body.firstName || !body.lastName) throw new Error('Укажите имя и фамилию.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) throw new Error('Укажите корректный email.');
+    if (!(body.height > 0 && body.weight > 0 && body.birthday)) throw new Error('Заполните рост, вес и дату рождения.');
+    if (new Date(body.birthday) >= new Date()) throw new Error('Дата рождения должна быть в прошлом.');
+    const p = await api('/api/profiles', {method: 'POST', body: JSON.stringify(body)});
+    enter(p);
+    toast(`Добро пожаловать, ${p.firstName}! Профиль создан.`);
+  });
+});
+
+$('#login').addEventListener('submit', e => {
+  e.preventDefault();
+  const f = e.target, email = String(new FormData(f).get('email')).trim();
+  run(f, async () => {
+    if (!email) throw new Error('Введите email.');
+    try { enter(await api('/api/profiles/by-email?email=' + encodeURIComponent(email))); }
+    catch (err) { throw err.status === 404 ? new Error('Профиль с таким email не найден. Сначала зарегистрируйтесь.') : err; }
+  });
+});
+
+/* генерация */
+const setDays = n => { state.days = Math.min(14, Math.max(1, n)); $('#days').textContent = state.days; };
+$('#dec').onclick = () => setDays(state.days - 1);
+$('#inc').onclick = () => setDays(state.days + 1);
+
+$('#gen').addEventListener('submit', e => {
+  e.preventDefault();
+  const f = e.target;
+  run(f, async () => {
+    const q = new URLSearchParams({profileId: state.profile.id, days: state.days, mealsPerDay: new FormData(f).get('meals')});
+    await showPlan(await api('/api/meal-plans/generate?' + q, {method: 'POST'}));
+  });
+});
+
+/* мои планы */
+async function showPlan(plan) {
+  const ids = [...new Set(plan.meals.map(m => m.dishId))];
+  const dishes = await Promise.all(ids.map(id => api('/api/dishes/' + id).catch(() => null)));
+  state.dishes = new Map(dishes.filter(Boolean).map(d => [d.id, d]));
+  state.plan = plan; state.basket = null; state.day = 1; renderResult(); loadPlans(); loadBasket();
+}
+
+async function loadPlans() {
+  const ul = $('#plans');
+  try {
+    const list = await api('/api/meal-plans?profileId=' + state.profile.id);
+    ul.replaceChildren(...(list.length ? list.map(planItem) : [h('li', {class: 'muted small'}, 'Сохранённых планов пока нет.')]));
+  } catch (e) { ul.replaceChildren(h('li', {class: 'err'}, e.message)); }
+}
+
+function planItem(p) {
+  const per = Math.round(p.mealsCount / p.days);
+  return h('li', {},
+    h('button', {type: 'button', class: 'open', 'aria-current': !!(state.plan && state.plan.id === p.id), onclick: () => openPlan(p.id)},
+      `План № ${p.id}`, h('small', {}, `${p.days} ${plural(p.days, 'день', 'дня', 'дней')}, ${per} ${plural(per, 'приём', 'приёма', 'приёмов')} в день`)),
+    h('button', {type: 'button', class: 'del', title: 'Удалить', 'aria-label': `Удалить план № ${p.id}`, onclick: () => removePlan(p.id)}, '×'));
+}
+
+async function openPlan(id) {
+  try { await showPlan(await api('/api/meal-plans/' + id)); } catch (e) { toast(e.message); }
+}
+
+async function removePlan(id) {
+  if (!confirm(`Удалить план № ${id}? Это нельзя отменить.`)) return;
+  try { await api('/api/meal-plans/' + id, {method: 'DELETE'}); }
+  catch (e) { if (e.status !== 404) { toast(e.message); return; } }
+  if (state.plan && state.plan.id === id) { state.plan = null; renderResult(); }
+  toast(`План № ${id} удалён.`);
+  loadPlans();
+}
+
+/* результат */
+const kcal = m => { const d = state.dishes.get(m.dishId); return d ? d.calories * m.portion : null; };
+
+function renderResult() {
+  const box = $('#result'), plan = state.plan;
+  if (!plan) {
+    box.replaceChildren(h('div', {class: 'empty'}, h('h2', {}, 'Плана пока нет'),
+      h('p', {}, 'Выберите число дней и приёмов пищи слева и нажмите «Составить план».')));
+    return;
+  }
+  const meals = plan.meals.filter(m => m.dayNumber === state.day)
+    .sort((a, b) => ORDER.indexOf(a.mealType) - ORDER.indexOf(b.mealType));
+  const total = meals.reduce((s, m) => s + (kcal(m) || 0), 0);
+  const perDay = plan.meals.length / plan.days;
+
+  const rows = meals.map(m => {
+    const d = state.dishes.get(m.dishId), k = kcal(m);
+    return h('details', {class: 'meal'},
+      h('summary', {}, h('span', {class: 'kind'}, MEAL[m.mealType] || m.mealType), h('span', {class: 'dish'}, m.dishName),
+        h('span', {class: 'kcal'}, k == null ? '—' : `${fmt.format(k)} ккал`, h('small', {}, `порция ×${fmt1.format(m.portion)}`))),
+      d ? h('ul', {class: 'ing'}, d.ingredients.map(i =>
+        h('li', {}, h('span', {}, i.productName), h('span', {}, `${fmt.format(i.amount * m.portion)} г`)))) : null);
+  });
+
+  box.replaceChildren(
+    h('div', {class: 'head'},
+      h('div', {}, h('h2', {}, `План на ${plan.days} ${plural(plan.days, 'день', 'дня', 'дней')}`),
+        h('p', {class: 'muted small'}, `План № ${plan.id}, ${perDay} ${plural(perDay, 'приём', 'приёма', 'приёмов')} пищи в день`))),
+    h('div', {class: 'days'}, Array.from({length: plan.days}, (_, i) => i + 1).map(n =>
+      h('button', {type: 'button', 'aria-pressed': n === state.day, onclick: () => { state.day = n; renderResult(); }}, `День ${n}`))),
+    h('section', {class: 'card'}, rows,
+      h('div', {class: 'total'}, h('span', {}, 'Итого за день'), h('span', {}, total ? `${fmt.format(total)} ккал` : '—'))),
+    basketCard()
+  );
+}
+
+/* корзина продуктов */
+const CAT = {MEAT: 'Мясо и птица', FISH: 'Рыба', SEAFOOD: 'Морепродукты', DAIRY: 'Молочные продукты', EGGS: 'Яйца',
+  GRAINS: 'Крупы и мука', PASTA: 'Макароны', BREAD: 'Хлеб', VEGETABLES: 'Овощи и зелень', FRUITS: 'Фрукты',
+  BERRIES: 'Ягоды', NUTS: 'Орехи и семена', LEGUMES: 'Бобовые', OIL: 'Масла', SAUCES: 'Соусы',
+  SWEETS: 'Сладкое', BEVERAGES: 'Напитки', OTHER: 'Прочее'};
+const weight = g => g >= 1000 ? `${fmt1.format(g / 1000)} кг` : `${fmt.format(Math.max(1, Math.round(g)))} г`;
+
+async function loadBasket() {
+  const planId = state.plan.id;
+  let basket = null;
+  try { basket = await api('/api/baskets/by-plan/' + planId); }
+  catch (e) { if (e.status !== 404) toast(e.message); }
+  if (state.plan && state.plan.id === planId) { state.basket = basket; renderResult(); }
+}
+
+async function buildBasket() {
+  try {
+    state.basket = await api('/api/baskets', {method: 'POST', body: JSON.stringify({mealPlanId: state.plan.id})});
+    renderResult();
+    toast('Корзина собрана.');
+  } catch (e) { toast(e.message); }
+}
+
+async function removeBasket() {
+  if (!confirm('Удалить корзину этого плана?')) return;
+  try { await api('/api/baskets/' + state.basket.id, {method: 'DELETE'}); state.basket = null; renderResult(); }
+  catch (e) { toast(e.message); }
+}
+
+function copyBasket() {
+  const text = state.basket.items.map(i => `${i.productName}: ${weight(i.amount)}`).join('\n');
+  navigator.clipboard.writeText(text).then(() => toast('Список скопирован.'), () => toast('Не удалось скопировать.'));
+}
+
+function basketCard() {
+  const b = state.basket, card = h('section', {class: 'card', id: 'basket'});
+  if (!b) {
+    card.append(h('h2', {}, 'Корзина продуктов'),
+      h('p', {class: 'muted small', style: 'margin:.5rem 0 1rem'}, 'Соберём список покупок на все дни плана: граммы блюд с учётом порций.'),
+      h('button', {type: 'button', class: 'btn', onclick: buildBasket}, 'Собрать корзину'));
+    return card;
+  }
+  const total = b.items.reduce((s, i) => s + i.amount, 0);
+  const rows = [];
+  let last;
+  for (const it of b.items) {
+    if (it.category !== last) { last = it.category; rows.push(h('h3', {class: 'cat'}, CAT[it.category] || 'Прочее')); }
+    const cb = h('input', {type: 'checkbox'});
+    cb.checked = it.purchased;
+    const row = h('label', {class: 'item' + (it.purchased ? ' done' : '')}, cb,
+      h('span', {class: 'nm'}, it.productName), h('span', {class: 'g'}, weight(it.amount)));
+    cb.addEventListener('change', async () => {
+      it.purchased = cb.checked; row.classList.toggle('done', cb.checked);
+      try { await api(`/api/baskets/${b.id}/items/${it.id}`, {method: 'PATCH', body: JSON.stringify({purchased: cb.checked})}); }
+      catch (e) { cb.checked = !cb.checked; it.purchased = cb.checked; row.classList.toggle('done', cb.checked); toast(e.message); }
+    });
+    rows.push(row);
+  }
+  card.append(h('h2', {}, 'Корзина продуктов'),
+    h('p', {class: 'muted small'}, `${b.items.length} ${plural(b.items.length, 'позиция', 'позиции', 'позиций')}, всего ${weight(total)}`),
+    ...rows,
+    h('div', {class: 'actions'},
+      h('button', {type: 'button', class: 'btn ghost', onclick: copyBasket}, 'Скопировать список'),
+      h('button', {type: 'button', class: 'btn ghost', onclick: buildBasket}, 'Пересобрать'),
+      h('button', {type: 'button', class: 'btn ghost', onclick: removeBasket}, 'Удалить корзину')));
+  return card;
+}
+
+function plural(n, a, b, c) {
+  const m10 = n % 10, m100 = n % 100;
+  return m10 === 1 && m100 !== 11 ? a : (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? b : c);
+}
+
+/* восстановление сессии */
+(async () => {
+  const id = store.get('pc.id');
+  if (!id) { tab(true); return; }
+  try { enter(await api('/api/profiles/' + encodeURIComponent(id))); }
+  catch { store.del('pc.id'); tab(true); }
+})();
+</script>
+</body>
+</html>

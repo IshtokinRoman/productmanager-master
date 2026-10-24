@@ -1,0 +1,42 @@
+name: productmanager
+
+services:
+  db:
+    image: postgres:18
+    container_name: productmanager-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-productmanager}
+      POSTGRES_USER: ${POSTGRES_USER:-productmanager}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?задайте POSTGRES_PASSWORD в файле .env}
+    ports:
+      # наружу порт 5433, чтобы не конфликтовать с локальным PostgreSQL на 5432
+      - "${DB_PORT:-5433}:5432"
+    volumes:
+      # в образах PostgreSQL 18+ данные лежат в подпапке /var/lib/postgresql
+      - pgdata:/var/lib/postgresql
+      # скрипты выполняются по алфавиту, но только при первом запуске с пустым томом
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # приложение в контейнере: docker compose --profile app up -d --build
+  app:
+    build: .
+    profiles: ["app"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-productmanager}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-productmanager}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:
