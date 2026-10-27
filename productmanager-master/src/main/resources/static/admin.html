@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Админка: блюда</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;600&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1d2145;--page:#edf1f7;--card:#fff;--line:#d8e0ec;--muted:#566083;--lime:#d4f04f;--radish:#cf2e66;
+--display:"Unbounded","Montserrat",system-ui,sans-serif;--body:"Onest",system-ui,"Segoe UI",sans-serif}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:var(--page);color:var(--ink);font:400 1rem/1.55 var(--body)}
+h1,h2,h3{font-family:var(--display);font-weight:600;letter-spacing:-.02em;line-height:1.15;margin:0}
+h2{font-size:1.25rem}.muted{color:var(--muted)}.small{font-size:.875rem}p{margin:0}
+:focus-visible{outline:3px solid var(--ink);outline-offset:2px}button{font:inherit;cursor:pointer}
+.top{display:flex;justify-content:space-between;align-items:center;padding:1rem clamp(1rem,3vw,2.5rem);background:var(--card);border-bottom:1px solid var(--line)}
+.logo{display:flex;align-items:center;gap:.6rem;font:600 .95rem var(--display);letter-spacing:-.02em}
+.logo svg{width:30px;height:30px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 20rem;gap:1.5rem;padding:1.5rem clamp(1rem,3vw,2.5rem);max-width:74rem;margin:0 auto;align-items:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:1.4rem}
+.narrow{max-width:26rem;margin:4rem auto}
+.stack{display:grid;gap:1.1rem}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+label.f,fieldset{display:grid;gap:.35rem;font-weight:500;font-size:.9rem;border:0;padding:0;margin:0;min-width:0}
+legend{padding:0;margin-bottom:.35rem;font-weight:500;font-size:.9rem}
+input[type=text],input[type=number],input[type=password],textarea{width:100%;font:inherit;color:inherit;background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:.65rem .8rem}
+textarea{resize:vertical;min-height:4.5rem}
+input:focus,textarea:focus{border-color:var(--ink);outline:none;box-shadow:0 0 0 3px #d4f04f99}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem}
+.chip{position:relative}.chip input{position:absolute;opacity:0;inset:0}
+.chip span{display:block;padding:.45rem .95rem;border:1.5px solid var(--line);border-radius:999px;font-weight:500;color:var(--muted);cursor:pointer}
+.chip input:checked+span{background:var(--lime);border-color:var(--lime);color:var(--ink)}
+.chip input:focus-visible+span{outline:3px solid var(--ink);outline-offset:2px}
+.ing{display:grid;grid-template-columns:minmax(0,1fr) 6.5rem 2.4rem;gap:.5rem;align-items:start}
+.ing small{display:block;margin-top:.2rem;min-height:1.1rem}
+.x{height:2.75rem;border:1.5px solid var(--line);background:var(--card);border-radius:10px;color:var(--muted);font-size:1.2rem}
+.x:hover{border-color:var(--radish);color:var(--radish)}
+.btn{border:0;background:var(--ink);color:#fff;font-weight:600;padding:.85rem 1.4rem;border-radius:999px;display:inline-flex;gap:.6rem;align-items:center;justify-content:center;text-decoration:none}
+.btn:hover{background:#2c3270}.btn[disabled]{opacity:.7;cursor:wait}
+.btn.ghost{background:none;color:var(--ink);border:1.5px solid var(--line);padding:.45rem 1rem;font-weight:500}
+.err{color:var(--radish);font-weight:500;font-size:.9rem}
+.sum{position:sticky;top:1rem;display:grid;gap:.6rem}
+.sum .big{font:600 2rem var(--display);letter-spacing:-.03em}
+.sum dl{display:grid;grid-template-columns:1fr auto;gap:.3rem 1rem;margin:0}.sum dd{margin:0;font-weight:500;text-align:right}
+.added{list-style:none;margin:0;padding:0;display:grid;gap:.3rem;font-size:.9rem}
+.added li{display:flex;justify-content:space-between;gap:1rem;border-top:1px solid var(--line);padding-top:.3rem}
+#toast{position:fixed;left:50%;bottom:1.5rem;transform:translate(-50%,2rem);background:var(--ink);color:#fff;padding:.8rem 1.2rem;border-radius:12px;max-width:min(90vw,32rem);opacity:0;pointer-events:none;transition:.25s;z-index:9}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+@media (max-width:860px){.layout{grid-template-columns:1fr}.sum{position:static}.two{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="logo"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="16" fill="#d4f04f"/><path d="M9 22c0-8 4-13 14-13 0 9-5 13-14 13zM9 22l8-8" fill="none" stroke="#1d2145" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Админка: блюда</div>
+  <a class="btn ghost" href="/">К сайту</a>
+</header>
+
+<main>
+  <section id="gate" class="card narrow stack" hidden>
+    <h2>Вход в админку</h2>
+    <form id="gateForm" class="stack" novalidate>
+      <label class="f">Ключ администратора<input type="password" id="key" autocomplete="current-password" required></label>
+      <p class="err" id="gateErr" role="alert"></p>
+      <button class="btn" type="submit">Войти</button>
+    </form>
+  </section>
+
+  <div id="panel" class="layout" hidden>
+    <form id="dish" class="card stack" novalidate>
+      <h2>Новое блюдо</h2>
+      <label class="f">Название<input type="text" id="name" maxlength="255" required></label>
+      <label class="f">Описание<textarea id="desc" maxlength="1000"></textarea></label>
+      <label class="f">Время приготовления, мин<input type="number" id="time" min="1" step="1" inputmode="numeric"></label>
+      <fieldset>
+        <legend>Подходит для приёмов пищи</legend>
+        <div class="chips" id="types"></div>
+        <p class="muted small">Отметьте несколько смежных приёмов (например, обед и ужин), если блюдо можно приготовить один раз на оба.</p>
+      </fieldset>
+      <fieldset>
+        <legend>Состав на одну порцию</legend>
+        <div class="stack" id="ings"></div>
+        <button type="button" class="btn ghost" id="addIng" style="justify-self:start">Добавить ингредиент</button>
+      </fieldset>
+      <p class="err" id="err" role="alert"></p>
+      <button class="btn" type="submit" id="save">Добавить блюдо</button>
+    </form>
+
+    <aside class="card sum" aria-live="polite">
+      <h3>Итого на порцию</h3>
+      <p class="big" id="kcal">0 ккал</p>
+      <dl><dt>Белки</dt><dd id="p">0 г</dd><dt>Жиры</dt><dd id="f">0 г</dd><dt>Углеводы</dt><dd id="c">0 г</dd><dt>Масса</dt><dd id="w">0 г</dd></dl>
+      <p class="muted small">Планировщик меняет порцию в 0,5–2 раза, поэтому удобнее всего блюда в диапазоне 150–900 ккал.</p>
+      <h3 style="margin-top:.8rem" id="addedTitle" hidden>Добавлено</h3>
+      <ul class="added" id="added"></ul>
+    </aside>
+  </div>
+</main>
+<datalist id="prods"></datalist>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const API = location.protocol === 'file:' ? 'http://localhost:8080' : '';
+const $ = s => document.querySelector(s);
+const fmt = new Intl.NumberFormat('ru-RU', {maximumFractionDigits: 0});
+const fmt1 = new Intl.NumberFormat('ru-RU', {maximumFractionDigits: 1});
+const TYPES = [['BREAKFAST', 'Завтрак'], ['SNACK', 'Перекус'], ['LUNCH', 'Обед'], ['DINNER', 'Ужин'], ['SECOND_SNACK', 'Поздний перекус']];
+const byName = new Map();   // название продукта (нижний регистр) -> продукт
+let adminKey = '';
+try { adminKey = sessionStorage.getItem('pc.adminKey') || ''; } catch {}
+
+function h(tag, props, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) e.setAttribute(k, v);
+  e.append(...kids.flat().filter(x => x != null));
+  return e;
+}
+
+async function api(path, opts = {}) {
+  let res;
+  try {
+    res = await fetch(API + path, {...opts, headers: {Accept: 'application/json',
+      ...(opts.body ? {'Content-Type': 'application/json'} : {}), ...(adminKey ? {'X-Admin-Key': adminKey} : {})}});
+  } catch { throw Object.assign(new Error('Сервер не отвечает. Откройте страницу по адресу http://localhost:8080/admin.html'), {status: 0}); }
+  const text = await res.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch {}
+  if (!res.ok) {
+    const detail = (data && (data.detail || data.message)) || '';
+    const msg = res.status === 401 ? 'Неверный ключ администратора.'
+      : /already exists/i.test(detail) ? 'Блюдо с таким названием уже есть.'
+      : res.status === 404 ? 'Не найдено: проверьте, что все продукты существуют.'
+      : res.status === 400 ? 'Проверьте данные: название, типы приёмов и состав.'
+      : res.status >= 500 ? 'Ошибка на сервере. Подробности в логе приложения.' : (detail || 'Не удалось выполнить запрос.');
+    throw Object.assign(new Error(msg), {status: res.status});
+  }
+  return data;
+}
+
+let timer;
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
+  clearTimeout(timer); timer = setTimeout(() => t.classList.remove('on'), 5000);
+}
+
+/* вход по ключу */
+async function start() {
+  try { await api('/api/admin/ping'); $('#gate').hidden = true; $('#panel').hidden = false; searchProducts(''); }
+  catch (e) {
+    if (e.status === 401) { $('#panel').hidden = true; $('#gate').hidden = false; $('#gateErr').textContent = adminKey ? e.message : ''; }
+    else toast(e.message);
+  }
+}
+$('#gateForm').addEventListener('submit', e => {
+  e.preventDefault();
+  adminKey = $('#key').value.trim();
+  try { sessionStorage.setItem('pc.adminKey', adminKey); } catch {}
+  start();
+});
+
+/* продукты */
+async function searchProducts(q) {
+  try {
+    const list = await api('/api/products?q=' + encodeURIComponent(q.trim()));
+    list.forEach(p => byName.set(p.name.toLowerCase(), p));
+    $('#prods').replaceChildren(...list.map(p => h('option', {value: p.name})));
+  } catch (e) { toast(e.message); }
+}
+const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+const productOf = row => byName.get(row.ref.name.value.trim().toLowerCase()) || null;
+
+/* ингредиенты */
+function addRow() {
+  const name = h('input', {type: 'text', list: 'prods', placeholder: 'Начните вводить продукт', 'aria-label': 'Продукт', autocomplete: 'off'});
+  const grams = h('input', {type: 'number', min: '1', step: '1', placeholder: 'г', 'aria-label': 'Граммы', inputmode: 'numeric'});
+  const info = h('small', {class: 'muted'});
+  const del = h('button', {type: 'button', class: 'x', 'aria-label': 'Убрать ингредиент', title: 'Убрать'}, '×');
+  const row = h('div', {class: 'ing'}, h('div', {}, name, info), grams, del);
+  row.ref = {name, grams, info};
+  name.addEventListener('input', debounce(() => searchProducts(name.value), 250));
+  name.addEventListener('input', () => { info.textContent = ''; recalc(); });
+  name.addEventListener('change', () => {
+    const p = productOf(row);
+    info.textContent = p ? `${fmt.format(p.calories)} ккал на 100 г` : 'Выберите продукт из списка';
+    recalc();
+  });
+  grams.addEventListener('input', recalc);
+  del.addEventListener('click', () => { row.remove(); recalc(); });
+  $('#ings').append(row);
+  return row;
+}
+const rows = () => [...document.querySelectorAll('#ings .ing')];
+
+function recalc() {
+  let k = 0, p = 0, f = 0, c = 0, w = 0;
+  for (const row of rows()) {
+    const prod = productOf(row), g = +row.ref.grams.value;
+    if (!prod || !(g > 0)) continue;
+    k += (prod.calories || 0) * g / 100; p += (prod.protein || 0) * g / 100;
+    f += (prod.fat || 0) * g / 100; c += (prod.carbohydrates || 0) * g / 100; w += g;
+  }
+  $('#kcal').textContent = `${fmt.format(k)} ккал`;
+  $('#p').textContent = `${fmt1.format(p)} г`; $('#f').textContent = `${fmt1.format(f)} г`;
+  $('#c').textContent = `${fmt1.format(c)} г`; $('#w').textContent = `${fmt.format(w)} г`;
+}
+
+/* форма */
+$('#types').append(...TYPES.map(([v, t]) =>
+  h('label', {class: 'chip'}, h('input', {type: 'checkbox', name: 'type', value: v}), h('span', {}, t))));
+$('#addIng').onclick = () => addRow().ref.name.focus();
+addRow();
+
+// Формат запроса POST /api/dishes. Если ваш DishCreateDto называет поля иначе, поправьте только здесь.
+function buildPayload(name, description, time, types, ingredients) {
+  return {name, description, ...(time ? {cookingTime: time} : {}), mealTypes: types,
+    ingredients: ingredients.map(i => ({product: {id: i.product.id}, amount: i.grams}))};
+}
+
+$('#dish').addEventListener('submit', async e => {
+  e.preventDefault();
+  const err = $('#err'), btn = $('#save');
+  err.textContent = '';
+  const name = $('#name').value.trim();
+  const types = [...document.querySelectorAll('input[name=type]:checked')].map(i => i.value);
+  const ingredients = [];
+  for (const row of rows()) {
+    const product = productOf(row), grams = +row.ref.grams.value;
+    if (!row.ref.name.value.trim() && !row.ref.grams.value) continue;   // пустую строку пропускаем
+    if (!product) { err.textContent = 'В каждой строке выберите продукт из списка.'; return; }
+    if (!(grams > 0)) { err.textContent = `Укажите граммы для продукта «${product.name}».`; return; }
+    ingredients.push({product, grams});
+  }
+  if (!name) { err.textContent = 'Укажите название блюда.'; return; }
+  if (!types.length) { err.textContent = 'Отметьте хотя бы один приём пищи.'; return; }
+  if (!ingredients.length) { err.textContent = 'Добавьте хотя бы один ингредиент.'; return; }
+  if (new Set(ingredients.map(i => i.product.id)).size !== ingredients.length) { err.textContent = 'Продукт в составе указан дважды.'; return; }
+
+  btn.disabled = true;
+  try {
+    const d = await api('/api/dishes', {method: 'POST',
+      body: JSON.stringify(buildPayload(name, $('#desc').value.trim(), +$('#time').value || null, types, ingredients))});
+    toast(`Блюдо «${d.name || name}» добавлено.`);
+    $('#addedTitle').hidden = false;
+    $('#added').prepend(h('li', {}, h('span', {}, d.name || name), h('span', {class: 'muted'}, d.calories != null ? `${fmt.format(d.calories)} ккал` : '')));
+    e.target.reset(); $('#ings').replaceChildren(); addRow(); recalc(); $('#name').focus();
+  } catch (ex) {
+    if (ex.status === 401) start(); else err.textContent = ex.message;
+  } finally { btn.disabled = false; }
+});
+
+start();
+</script>
+</body>
+</html>

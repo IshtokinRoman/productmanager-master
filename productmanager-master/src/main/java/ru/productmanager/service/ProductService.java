@@ -1,6 +1,8 @@
 package ru.productmanager.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.productmanager.dto.ProductCreateDto;
@@ -8,6 +10,8 @@ import ru.productmanager.exception.NotFoundException;
 import ru.productmanager.mapper.ProductMapper;
 import ru.productmanager.model.Product;
 import ru.productmanager.repo.ProductRepository;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -36,5 +40,10 @@ public class ProductService {
             return;
         }
         throw new NotFoundException("Product with id:" + id + ", not found!");
+    }
+
+    @Transactional(readOnly = true)
+    public List<Product> search(String query) {
+        return repository.findByNameContainingIgnoreCase(query.trim(), PageRequest.of(0, 50, Sort.by("name"))).getContent();
     }
 }

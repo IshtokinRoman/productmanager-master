@@ -25,9 +25,11 @@ public class MealPlanController {
     @PostMapping("/generate")
     public ResponseEntity<MealPlanResponse> generate(@RequestParam Long profileId,
                                                      @RequestParam int days,
-                                                     @RequestParam int mealsPerDay) {
+                                                     @RequestParam int mealsPerDay,
+                                                     @RequestParam(required = false) Integer cookingsPerDay) {
         UserProfile profile = profileService.getById(profileId); // 404, если профиля нет
-        MealPlan plan = service.generateMealPlan(profile, days, mealsPerDay);
+        MealPlan plan = service.generateMealPlan(profile, days, mealsPerDay,
+                cookingsPerDay != null ? cookingsPerDay : mealsPerDay);
 
         URI location = ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path("/api/meal-plans/{id}").buildAndExpand(plan.getId()).toUri();

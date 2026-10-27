@@ -25,7 +25,7 @@ services:
 
   # приложение в контейнере: docker compose --profile app up -d --build
   app:
-    build: .
+    build: ../../Downloads/docker-setup
     profiles: ["app"]
     depends_on:
       db:

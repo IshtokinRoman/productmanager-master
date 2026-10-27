@@ -101,6 +101,7 @@ ul.ing li{display:flex;justify-content:space-between;gap:1rem;max-width:24rem}
 .item .nm{flex:1}
 .item .g{font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
 .item.done .nm{text-decoration:line-through;color:var(--muted)}
+.dish small.with{display:block;font-weight:400;font-size:.85rem;color:var(--muted)}
 .actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem}
 #toast{position:fixed;left:50%;bottom:1.5rem;transform:translate(-50%,2rem);background:var(--ink);color:#fff;padding:.8rem 1.2rem;border-radius:12px;max-width:min(90vw,32rem);opacity:0;pointer-events:none;transition:.25s;z-index:9}
 #toast.on{opacity:1;transform:translate(-50%,0)}
@@ -205,6 +206,10 @@ ul.ing li{display:flex;justify-content:space-between;gap:1rem;max-width:24rem}
               <label><input type="radio" name="meals" value="5"><span>5</span></label>
             </div>
           </fieldset>
+          <label class="f">Готовок в день
+            <select id="cooks" name="cooks"></select>
+          </label>
+          <p id="cookHint" class="muted small" style="margin-top:-.4rem"></p>
           <p class="err" role="alert"></p>
           <button class="btn" type="submit">Составить план</button>
         </form>
@@ -250,6 +255,9 @@ function explain(status, d) {
   const detail = (d && (d.detail || d.message)) || '';
   const m = /No dishes for meal type (\w+)/.exec(detail);
   if (m) return `В каталоге нет блюд для приёма «${MEAL[m[1]] || m[1]}». Добавьте такие блюда и повторите.`;
+  const nm = /No dishes suitable for all meal types \[(.+)\]/.exec(detail);
+  if (nm) return `Нет блюд, подходящих сразу для приёмов: ${nm[1].split(',').map(s => MEAL[s.trim()] || s.trim()).join(', ')}. Уменьшите число готовок или добавьте блюдам смежные типы.`;
+  if (status === 400 && /готовок/.test(detail)) return detail;
   if (status === 400) return 'Проверьте введённые данные: все поля должны быть заполнены корректно.';
   if (status === 404) return 'Не найдено.';
   if (status === 409) return /email/i.test(detail) ? 'Этот email уже зарегистрирован. Перейдите на вкладку «Вход».' : 'Запись не сохранена: база данных отклонила данные.';
@@ -343,7 +351,7 @@ $('#gen').addEventListener('submit', e => {
   e.preventDefault();
   const f = e.target;
   run(f, async () => {
-    const q = new URLSearchParams({profileId: state.profile.id, days: state.days, mealsPerDay: new FormData(f).get('meals')});
+    const q = new URLSearchParams({profileId: state.profile.id, days: state.days, mealsPerDay: new FormData(f).get('meals'), cookingsPerDay: $('#cooks').value});
     await showPlan(await api('/api/meal-plans/generate?' + q, {method: 'POST'}));
   });
 });
@@ -399,11 +407,13 @@ function renderResult() {
     .sort((a, b) => ORDER.indexOf(a.mealType) - ORDER.indexOf(b.mealType));
   const total = meals.reduce((s, m) => s + (kcal(m) || 0), 0);
   const perDay = plan.meals.length / plan.days;
+  const cooks = new Set(meals.map(m => m.dishId)).size;
 
   const rows = meals.map(m => {
     const d = state.dishes.get(m.dishId), k = kcal(m);
+    const shared = meals.filter(x => x !== m && x.dishId === m.dishId).map(x => MEAL[x.mealType] || x.mealType);
     return h('details', {class: 'meal'},
-      h('summary', {}, h('span', {class: 'kind'}, MEAL[m.mealType] || m.mealType), h('span', {class: 'dish'}, m.dishName),
+      h('summary', {}, h('span', {class: 'kind'}, MEAL[m.mealType] || m.mealType), h('span', {class: 'dish'}, m.dishName, shared.length ? h('small', {class: 'with'}, `готовится один раз вместе: ${shared.join(', ')}`) : null),
         h('span', {class: 'kcal'}, k == null ? '—' : `${fmt.format(k)} ккал`, h('small', {}, `порция ×${fmt1.format(m.portion)}`))),
       d ? h('ul', {class: 'ing'}, d.ingredients.map(i =>
         h('li', {}, h('span', {}, i.productName), h('span', {}, `${fmt.format(i.amount * m.portion)} г`)))) : null);
@@ -416,7 +426,7 @@ function renderResult() {
     h('div', {class: 'days'}, Array.from({length: plan.days}, (_, i) => i + 1).map(n =>
       h('button', {type: 'button', 'aria-pressed': n === state.day, onclick: () => { state.day = n; renderResult(); }}, `День ${n}`))),
     h('section', {class: 'card'}, rows,
-      h('div', {class: 'total'}, h('span', {}, 'Итого за день'), h('span', {}, total ? `${fmt.format(total)} ккал` : '—'))),
+      h('div', {class: 'total'}, h('span', {}, `Итого за день, готовок: ${cooks}`), h('span', {}, total ? `${fmt.format(total)} ккал` : '—'))),
     basketCard()
   );
 }
@@ -493,6 +503,28 @@ function plural(n, a, b, c) {
   const m10 = n % 10, m100 = n % 100;
   return m10 === 1 && m100 !== 11 ? a : (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? b : c);
 }
+
+/* число готовок */
+let cooksSeparate = true;
+function syncCooks() {
+  const meals = +new FormData($('#gen')).get('meals'), sel = $('#cooks'), prev = +sel.value;
+  sel.replaceChildren(...Array.from({length: meals}, (_, i) => i + 1).map(k =>
+    h('option', {value: k}, k === meals ? `${k}, каждый приём отдельно` : `${k} ${plural(k, 'готовка', 'готовки', 'готовок')}`)));
+  sel.value = cooksSeparate || !prev || prev > meals ? meals : prev;
+  cookHint();
+}
+function cookHint() {
+  const meals = +new FormData($('#gen')).get('meals');
+  $('#cookHint').textContent = +$('#cooks').value < meals
+    ? 'Одно блюдо готовится сразу на несколько соседних приёмов пищи.'
+    : 'Каждый приём пищи готовится отдельно.';
+}
+$('#cooks').addEventListener('change', () => {
+  cooksSeparate = +$('#cooks').value === +new FormData($('#gen')).get('meals');
+  cookHint();
+});
+document.querySelectorAll('input[name=meals]').forEach(r => r.addEventListener('change', syncCooks));
+syncCooks();
 
 /* восстановление сессии */
 (async () => {

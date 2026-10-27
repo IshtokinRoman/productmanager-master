@@ -23,9 +23,6 @@ public class Dish {
 
     private Integer cookingTime;
 
-    @Enumerated(EnumType.STRING)
-    private MealType mealType;
-
     @OneToMany(mappedBy = "dish", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DishIngredient> ingredients = new ArrayList<>();
 

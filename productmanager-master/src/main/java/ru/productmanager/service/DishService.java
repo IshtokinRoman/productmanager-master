@@ -31,7 +31,6 @@ public class DishService {
         dish.setName(dto.getName());
         dish.setDescription(dto.getDescription());
         dish.setCookingTime(dto.getCookingTime());
-        dish.setMealType(dto.getMealType());
 
         Set<Long> ids = dto.getIngredients().stream()
                 .map(dishIngredient -> dishIngredient.getProduct().getId())

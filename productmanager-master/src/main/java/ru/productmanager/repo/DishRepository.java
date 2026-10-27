@@ -8,6 +8,4 @@ import java.util.List;
 
 public interface DishRepository extends JpaRepository<Dish, Long> {
     boolean existsByNameIgnoreCase(String name);
-
-    List<Dish> findByMealType(MealType type);
 }

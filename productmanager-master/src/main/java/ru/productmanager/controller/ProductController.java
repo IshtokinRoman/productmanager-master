@@ -12,6 +12,7 @@ import ru.productmanager.model.Product;
 import ru.productmanager.service.ProductService;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
@@ -25,6 +26,11 @@ public class ProductController {
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}").buildAndExpand(saved.getId()).toUri();
         return ResponseEntity.created(location).body(ProductResponse.from(saved));
+    }
+
+    @GetMapping
+    public List<ProductResponse> search(@RequestParam(defaultValue = "") String q) {
+        return service.search(q).stream().map(ProductResponse::from).toList();
     }
 
     @GetMapping("/{id}")

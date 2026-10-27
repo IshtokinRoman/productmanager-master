@@ -10,7 +10,6 @@ public record DishResponse(
         String name,
         String description,
         Integer cookingTime,
-        MealType mealType,
         double calories,
         List<IngredientItem> ingredients
 ) {
@@ -36,7 +35,6 @@ public record DishResponse(
                 dish.getName(),
                 dish.getDescription(),
                 dish.getCookingTime(),
-                dish.getMealType(),
                 dish.getCalories(),
                 items);
     }
