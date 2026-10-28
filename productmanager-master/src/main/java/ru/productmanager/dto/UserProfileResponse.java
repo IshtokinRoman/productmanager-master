@@ -18,7 +18,8 @@ public record UserProfileResponse(
         int age,
         Gender gender,
         ActivityLevel activityLevel,
-        Goal goal
+        Goal goal,
+        Long familyId
 ) {
     public static UserProfileResponse from(UserProfile profile) {
         return new UserProfileResponse(
@@ -32,6 +33,7 @@ public record UserProfileResponse(
                 profile.getAge(),
                 profile.getGender(),
                 profile.getActivityLevel(),
-                profile.getGoal());
+                profile.getGoal(),
+                profile.getFamily() == null ? null : profile.getFamily().getId());
     }
 }

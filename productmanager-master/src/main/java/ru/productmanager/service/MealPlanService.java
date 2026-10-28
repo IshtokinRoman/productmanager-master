@@ -8,6 +8,7 @@ import ru.productmanager.exception.NotFoundException;
 import ru.productmanager.model.*;
 import ru.productmanager.repo.MealPlanRepository;
 import ru.productmanager.repo.MealTypeByDishRepository;
+import ru.productmanager.repo.UserProfileRepository;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -22,10 +23,14 @@ public class MealPlanService {
     private static final double MAX_PORTION = 2.0;
     private static final double PREFERRED_MIN_PORTION = 0.75;
     private static final double PREFERRED_MAX_PORTION = 1.5;
+    // в семье нормы калорий различаются (ребёнок и взрослый), поэтому личные порции допускаются шире
+    private static final double FAMILY_MIN_PORTION = 0.3;
+    private static final double FAMILY_MAX_PORTION = 3.0;
     private static final int CLOSEST_LIMIT = 3;
 
     private final MealTypeByDishRepository mealTypeByDishRepository;
     private final MealPlanRepository repository;
+    private final UserProfileRepository userProfileRepository;
     private final BmrCalculator calculator;
 
     @Transactional(readOnly = true)
@@ -41,30 +46,51 @@ public class MealPlanService {
     }
 
     /**
-     * Приёмы пищи дня разбиваются на группы по количеству готовок. Для группы выбирается ОДНО блюдо,
-     * которое подходит ко всем её типам приёма пищи: его готовят один раз, а едят в несколько приёмов.
-     * Порция каждого приёма считается от его собственной калорийной цели.
+     * План для одного человека (forFamily = false) или для всей семьи профиля (forFamily = true).
+     * Для приёма пищи выбирается одно блюдо на всех. Порция каждого участника считается от его собственной
+     * нормы калорий и записывается в MealPortion, а Meal.portion равна сумме порций участников.
      */
     @Transactional
-    public MealPlan generateMealPlan(UserProfile profile, int days, int mealsPerDay, int cookingCountPerDay) {
+    public MealPlan generateMealPlan(UserProfile requester, boolean forFamily, int days, int mealsPerDay,
+                                     int cookingCountPerDay) {
         if (days < 1) {
             throw new IllegalArgumentException("days must be >= 1");
         }
 
-        MealPlan plan = new MealPlan();
-        plan.setOwner(profile);
-        plan.setDays(days);
+        UserProfile owner = userProfileRepository.findById(requester.getId())
+                .orElseThrow(() -> new NotFoundException("User Profile with id:" + requester.getId() + ", not found!"));
 
-        double dailyCalories = calculator.calculateDailyCalories(profile.getGender(), profile.getWeight(),
-                profile.getHeight(), profile.getAge(), profile.getActivityLevel());
+        Family family = null;
+        List<UserProfile> members = List.of(owner);
+        if (forFamily) {
+            family = owner.getFamily();
+            if (family == null) {
+                throw new IllegalArgumentException("Профиль не состоит в семье");
+            }
+            members = userProfileRepository.findByFamilyIdOrderById(family.getId());
+        }
+
+        List<Double> dailyCalories = members.stream().map(this::dailyCaloriesOf).toList();
+        double meanDaily = dailyCalories.stream().mapToDouble(Double::doubleValue).average().orElseThrow();
+        boolean shared = members.size() > 1;
+        double minPortion = shared ? FAMILY_MIN_PORTION : MIN_PORTION;
+        double maxPortion = shared ? FAMILY_MAX_PORTION : MAX_PORTION;
+
+        MealPlan plan = new MealPlan();
+        plan.setOwner(owner);
+        plan.setFamily(family);
+        plan.setDays(days);
 
         Map<MealType, Double> mealShares = getTargetCaloriesByMeals(mealsPerDay);
         List<List<MealType>> groups = getMealTypeByCookingCount(mealsPerDay, cookingCountPerDay);
 
         // кандидатов для каждой готовки грузим один раз, до цикла по дням
         List<List<Dish>> candidatesByGroup = new ArrayList<>();
+        List<Long> excludedIds = requester.getExcludedProducts().stream()
+                .map(excludedProduct -> excludedProduct.getProduct().getId())
+                .toList();
         for (List<MealType> group : groups) {
-            List<Dish> candidates = mealTypeByDishRepository.findDishesByMealTypes(group);
+            List<Dish> candidates = mealTypeByDishRepository.findDishesByMealTypes(group, excludedIds);
             if (candidates.isEmpty()) {
                 throw new IllegalStateException("No dishes suitable for all meal types " + group);
             }
@@ -78,12 +104,11 @@ public class MealPlanService {
             for (int g = 0; g < groups.size(); g++) {
                 List<MealType> group = groups.get(g);
 
-                // калорийная цель каждого приёма группы
+                // блюдо подбираем по средней цели участников
                 List<Double> targets = group.stream()
-                        .map(type -> mealShares.get(type) * dailyCalories)
+                        .map(type -> mealShares.get(type) * meanDaily)
                         .toList();
 
-                // блюдо считается недавним, если оно недавно было хотя бы в одном из типов группы
                 Set<Long> recent = new HashSet<>();
                 for (MealType type : group) {
                     recent.addAll(recentIds.computeIfAbsent(type, t -> new ArrayDeque<>()));
@@ -91,24 +116,26 @@ public class MealPlanService {
 
                 Dish dish = pickDish(candidatesByGroup.get(g), recent, targets);
 
-                for (int i = 0; i < group.size(); i++) {
-                    MealType type = group.get(i);
-
+                for (MealType type : group) {
                     Deque<Long> history = recentIds.get(type);
                     history.addLast(dish.getId());
                     if (history.size() > REPEAT_WINDOW_DAYS) {
                         history.removeFirst();
                     }
 
-                    double portion = targets.get(i) / dish.getCalories();
-                    portion = Math.max(MIN_PORTION, Math.min(MAX_PORTION, portion));
-
                     Meal meal = new Meal();
                     meal.setDish(dish);
                     meal.setDayNumber(day);
                     meal.setMealType(type);
-                    meal.setPortion(portion);
-                    meal.setMealPlan(plan);
+
+                    double total = 0;
+                    for (int i = 0; i < members.size(); i++) {
+                        double target = mealShares.get(type) * dailyCalories.get(i);
+                        double portion = Math.max(minPortion, Math.min(maxPortion, target / dish.getCalories()));
+                        meal.addMemberPortion(members.get(i), portion);
+                        total += portion;
+                    }
+                    meal.setPortion(total);
                     plan.addMeal(meal);
                 }
             }
@@ -120,6 +147,15 @@ public class MealPlanService {
     @Transactional(readOnly = true)
     public List<MealPlanSummary> getPlansByOwner(Long profileId) {
         return repository.findSummariesByOwnerId(profileId);
+    }
+
+    private double dailyCaloriesOf(UserProfile member) {
+        if (member.getGender() == null || member.getWeight() == null || member.getHeight() == null
+                || member.getBirthday() == null || member.getActivityLevel() == null) {
+            throw new IllegalArgumentException("Профиль «" + member.getFirstName() + "» заполнен не полностью");
+        }
+        return calculator.calculateDailyCalories(member.getGender(), member.getWeight(), member.getHeight(),
+                member.getAge(), member.getActivityLevel());
     }
 
     private Map<MealType, Double> getTargetCaloriesByMeals(int mealsPerDay) {
@@ -150,7 +186,7 @@ public class MealPlanService {
 
     /**
      * Блюдо подходит, если его можно довести до цели множителем порции, причём для КАЖДОГО приёма
-     * группы (у группы из одного приёма цель одна). Порядок выбора:
+     * группы. Порядок выбора:
      * 1) свежие блюда с порцией в комфортном диапазоне;
      * 2) свежие блюда с любой допустимой порцией;
      * 3) недавно использованные блюда с допустимой порцией;
@@ -215,40 +251,20 @@ public class MealPlanService {
         return list.get(ThreadLocalRandom.current().nextInt(list.size()));
     }
 
-    private List<List<MealType>> getMealTypeByCookingCount(
-            int mealsPerDay,
-            int cookingCountByDay) {
+    private List<List<MealType>> getMealTypeByCookingCount(int mealsPerDay, int cookingCountByDay) {
         if (mealsPerDay < 3 || mealsPerDay > 5) {
-            throw new IllegalArgumentException(
-                    "Количество приёмов пищи должно быть от 3 до 5"
-            );
+            throw new IllegalArgumentException("Количество приёмов пищи должно быть от 3 до 5");
         }
 
         if (cookingCountByDay < 1 || cookingCountByDay > mealsPerDay) {
-            throw new IllegalArgumentException(
-                    "Количество готовок должно быть от 1 до " + mealsPerDay
-            );
+            throw new IllegalArgumentException("Количество готовок должно быть от 1 до " + mealsPerDay);
         }
 
         List<MealType> mealTypes = switch (mealsPerDay) {
-            case 3 -> List.of(
-                    MealType.BREAKFAST,
-                    MealType.LUNCH,
-                    MealType.DINNER
-            );
-            case 4 -> List.of(
-                    MealType.BREAKFAST,
-                    MealType.SNACK,
-                    MealType.LUNCH,
-                    MealType.DINNER
-            );
-            case 5 -> List.of(
-                    MealType.BREAKFAST,
-                    MealType.SNACK,
-                    MealType.LUNCH,
-                    MealType.DINNER,
-                    MealType.SECOND_SNACK
-            );
+            case 3 -> List.of(MealType.BREAKFAST, MealType.LUNCH, MealType.DINNER);
+            case 4 -> List.of(MealType.BREAKFAST, MealType.SNACK, MealType.LUNCH, MealType.DINNER);
+            case 5 -> List.of(MealType.BREAKFAST, MealType.SNACK, MealType.LUNCH, MealType.DINNER,
+                    MealType.SECOND_SNACK);
             default -> throw new IllegalStateException();
         };
 
@@ -261,9 +277,7 @@ public class MealPlanService {
         for (int i = 0; i < cookingCountByDay; i++) {
             int groupSize = baseSize + (i < remainder ? 1 : 0);
 
-            List<MealType> group = new ArrayList<>(
-                    mealTypes.subList(index, index + groupSize)
-            );
+            List<MealType> group = new ArrayList<>(mealTypes.subList(index, index + groupSize));
 
             result.add(group);
             index += groupSize;

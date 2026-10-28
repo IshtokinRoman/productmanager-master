@@ -24,10 +24,17 @@ public interface MealTypeByDishRepository extends JpaRepository<MealTypeByDish, 
     SELECT mtd.dish
     FROM MealTypeByDish mtd
     WHERE mtd.mealType IN :mealTypes
+      AND NOT EXISTS (
+          SELECT di
+          FROM DishIngredient di
+          WHERE di.dish = mtd.dish
+            AND di.product.id IN :excludeProductIds
+      )
     GROUP BY mtd.dish
     HAVING COUNT(DISTINCT mtd.mealType) = :#{#mealTypes.size()}
     """)
     List<Dish> findDishesByMealTypes(
-            @Param("mealTypes") List<MealType> mealTypes
+            @Param("mealTypes") List<MealType> mealTypes,
+            @Param("excludeProductIds") List<Long> excludeProductIds
     );
 }

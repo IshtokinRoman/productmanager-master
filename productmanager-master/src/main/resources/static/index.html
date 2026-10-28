@@ -57,17 +57,37 @@ input:focus,select:focus{border-color:var(--ink);outline:none;box-shadow:0 0 0 3
 @keyframes sp{to{transform:rotate(360deg)}}
 
 /* app */
-.top{display:flex;justify-content:space-between;align-items:center;padding:1rem clamp(1rem,3vw,2.5rem);background:var(--card);border-bottom:1px solid var(--line)}
-.who{display:flex;gap:.8rem;align-items:center}
+.top{position:sticky;top:0;z-index:5;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:1rem;padding:.7rem clamp(1rem,3vw,2.5rem);background:var(--card);border-bottom:1px solid var(--line)}
+.nav{display:flex;justify-content:center;gap:.25rem}
+.nav button{display:flex;align-items:center;gap:.5rem;border:0;background:none;padding:.55rem 1rem;border-radius:999px;color:var(--muted);font-weight:500}
+.nav svg,.me svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.nav button:hover{background:#eef1f8;color:var(--ink)}
+.nav button[aria-current=true]{background:var(--lime);color:var(--ink)}
+.me{display:flex;align-items:center;gap:.6rem;border:0;background:none;padding:.25rem .8rem .25rem .25rem;border-radius:999px;font-weight:500;color:var(--ink)}
+.me:hover{background:#eef1f8}
+.ava{display:grid;place-items:center;width:2.2rem;height:2.2rem;flex:none;border-radius:50%;background:var(--ink);color:var(--lime);font:600 .8rem var(--display)}
+.ava.big{width:4.5rem;height:4.5rem;font-size:1.3rem}
+.wrap{padding-bottom:2rem}
+.narrow{max-width:38rem;margin:0 auto;padding:1.5rem clamp(1rem,3vw,2.5rem);display:grid;gap:1.25rem}
+#view-plans{max-width:78rem;margin:0 auto;padding:1.5rem clamp(1rem,3vw,2.5rem)}
+.page-head{margin-bottom:1rem}
+.prof{display:flex;align-items:center;gap:1.1rem}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:.9rem 1rem;display:grid;gap:.15rem}
+.tile span{color:var(--muted);font-size:.85rem}
+.tile strong{font:600 1.05rem var(--display);letter-spacing:-.02em;overflow-wrap:anywhere}
+#view-plan aside{position:sticky;top:5rem}
+@keyframes viewin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.view-in{animation:viewin .28s ease both}
 .layout{display:grid;grid-template-columns:21rem minmax(0,1fr);gap:1.5rem;padding:1.5rem clamp(1rem,3vw,2.5rem);max-width:78rem;margin:0 auto;align-items:start}
-.card{background:var(--card);border-radius:18px;padding:1.25rem;border:1px solid var(--line)}
+.card{background:var(--card);border-radius:20px;padding:1.4rem;border:1px solid var(--line);box-shadow:0 1px 2px rgba(29,33,69,.04),0 10px 28px -14px rgba(29,33,69,.18)}
 aside{display:grid;gap:1.25rem}
 dl{display:grid;grid-template-columns:auto 1fr;gap:.35rem 1rem;margin:.9rem 0 0}
 dt{color:var(--muted)}dd{margin:0;text-align:right;font-weight:500;overflow-wrap:anywhere}
 .step{display:flex;align-items:center;justify-content:space-between;border:1.5px solid var(--line);border-radius:12px;padding:.3rem}
 .step button{width:2.4rem;height:2.4rem;border:0;border-radius:9px;background:#dfe6f1;font-size:1.2rem;color:var(--ink)}
 .step output{font-weight:600;font-size:1.05rem}
-.empty{padding:3rem 1.5rem;text-align:center;border:2px dashed var(--line);border-radius:18px;color:var(--muted)}
+.empty{padding:3.5rem 1.5rem;text-align:center;background:var(--card);border:1.5px dashed #b9c4da;border-radius:20px;color:var(--muted)}
 .empty h2{color:var(--ink);margin-bottom:.6rem}
 .empty p{max-width:36ch;margin:0 auto}
 .head{display:flex;justify-content:space-between;align-items:end;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
@@ -80,16 +100,20 @@ summary{list-style:none;display:grid;grid-template-columns:8rem 1fr auto 1rem;ga
 summary::-webkit-details-marker{display:none}
 summary::after{content:"";width:.55rem;height:.55rem;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s}
 details[open] summary::after{transform:rotate(-135deg)}
-.kind{color:var(--muted);font-size:.9rem}
+.kind{justify-self:start;font-size:.8rem;font-weight:500;padding:.2rem .7rem;border-radius:999px;background:#eef1f8;color:var(--muted)}
+.kind[data-t=BREAKFAST]{background:#f3fad0;color:#4d5a10}
+.kind[data-t=LUNCH]{background:#dfe9fb;color:#243a73}
+.kind[data-t=DINNER]{background:#e7e2f7;color:#3b2f78}
+.kind[data-t=SNACK],.kind[data-t=SECOND_SNACK]{background:#fde5ec;color:#8a2147}
 .dish{font-weight:600}
 .kcal{text-align:right;font-variant-numeric:tabular-nums;font-weight:500;white-space:nowrap}
 .kcal small{display:block;color:var(--muted);font-weight:400}
 ul.ing{list-style:none;margin:0;padding:0 .25rem 1rem 9.25rem;display:grid;gap:.2rem;color:var(--muted);font-size:.9rem}
 ul.ing li{display:flex;justify-content:space-between;gap:1rem;max-width:24rem}
 .total{display:flex;justify-content:space-between;margin-top:.5rem;padding:.9rem 1rem;background:var(--ink);color:#fff;border-radius:12px;font-weight:600}
-.plans{list-style:none;margin:.8rem 0 0;padding:0;display:grid;gap:.4rem}
+.plans{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(17rem,1fr));gap:.75rem}
 .plans li{display:flex;gap:.4rem;align-items:stretch}
-.plans .open{flex:1;text-align:left;border:1.5px solid var(--line);background:var(--card);border-radius:12px;padding:.55rem .8rem;color:var(--ink);font-weight:500}
+.plans .open{flex:1;text-align:left;border:1.5px solid var(--line);background:var(--card);border-radius:16px;padding:1rem 1.1rem;color:var(--ink);font-weight:600}
 .plans .open small{display:block;color:var(--muted);font-weight:400}
 .plans .open[aria-current=true]{background:var(--lime);border-color:var(--lime)}
 .plans .del{width:2.5rem;border:1.5px solid var(--line);background:var(--card);border-radius:12px;color:var(--muted);font-size:1.2rem}
@@ -102,6 +126,15 @@ ul.ing li{display:flex;justify-content:space-between;gap:1rem;max-width:24rem}
 .item .g{font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
 .item.done .nm{text-decoration:line-through;color:var(--muted)}
 .dish small.with{display:block;font-weight:400;font-size:.85rem;color:var(--muted)}
+.inline{display:flex;gap:.5rem;margin-top:.7rem}.inline input{flex:1;min-width:0}
+.members{list-style:none;margin:.7rem 0 0;padding:0;display:grid;gap:.3rem}
+.members li{display:flex;justify-content:space-between;align-items:center;gap:.5rem;border-top:1px solid var(--line);padding-top:.35rem}
+.members small{display:block}
+.fam{font:600 1.05rem var(--display);letter-spacing:-.02em}
+.x2{border:0;background:none;color:var(--muted);font-size:1.3rem;padding:.2rem .5rem}.x2:hover{color:var(--radish)}
+.seg input:disabled+span{opacity:.4;cursor:not-allowed}
+.who{padding:0 .25rem .7rem 9.25rem;font-size:.9rem}
+@media (max-width:860px){.who{padding-left:.25rem}}
 .actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem}
 #toast{position:fixed;left:50%;bottom:1.5rem;transform:translate(-50%,2rem);background:var(--ink);color:#fff;padding:.8rem 1.2rem;border-radius:12px;max-width:min(90vw,32rem);opacity:0;pointer-events:none;transition:.25s;z-index:9}
 #toast.on{opacity:1;transform:translate(-50%,0)}
@@ -110,6 +143,14 @@ ul.ing li{display:flex;justify-content:space-between;gap:1rem;max-width:24rem}
  .layout{grid-template-columns:1fr}
  summary{grid-template-columns:1fr auto 1rem}.kind{grid-column:1/-1;margin-bottom:-.7rem}
  ul.ing{padding-left:.25rem}
+}
+@media (max-width:860px){
+ .top{grid-template-columns:1fr auto}
+ .nav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-top:1px solid var(--line);padding:.35rem .5rem calc(.35rem + env(safe-area-inset-bottom));justify-content:space-around}
+ .nav button{flex:1;flex-direction:column;gap:.1rem;font-size:.72rem;padding:.4rem .3rem;border-radius:12px}
+ #who{display:none}.me{padding-right:.25rem}
+ .wrap{padding-bottom:5.5rem}
+ #view-plan aside{position:static}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
@@ -185,42 +226,72 @@ ul.ing li{display:flex;justify-content:space-between;gap:1rem;max-width:24rem}
 <div id="app" hidden>
   <header class="top">
     <div class="logo"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="16" fill="#d4f04f"/><path d="M9 22c0-8 4-13 14-13 0 9-5 13-14 13zM9 22l8-8" fill="none" stroke="#1d2145" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Продуктовый консультант</div>
-    <div class="who"><span id="who" class="muted small"></span><button class="btn ghost" id="logout" type="button">Выйти</button></div>
+    <nav class="nav" aria-label="Разделы">
+      <button type="button" data-view="plan" aria-current="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM5 9h14M9 2v4M15 2v4"/></svg><span>План</span></button>
+      <button type="button" data-view="plans" aria-current="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg><span>Мои планы</span></button>
+      <button type="button" data-view="family" aria-current="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6M15 14.5c3 0 6 1.7 6 5"/></svg><span>Семья</span></button>
+      <button type="button" data-view="profile" aria-current="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg><span>Профиль</span></button>
+    </nav>
+    <button class="me" type="button" data-view="profile" aria-label="Открыть профиль"><span class="ava" id="ava"></span><span id="who"></span></button>
   </header>
-  <div class="layout">
-    <aside>
-      <section class="card">
-        <h2>Ваш профиль</h2>
-        <dl id="profile"></dl>
-      </section>
-      <section class="card">
-        <h2>Новый план</h2>
-        <form id="gen" class="stack" style="margin-top:1rem" novalidate>
-          <fieldset><legend>Сколько дней</legend>
-            <div class="step"><button type="button" id="dec" aria-label="Меньше дней">−</button><output id="days" aria-live="polite">3</output><button type="button" id="inc" aria-label="Больше дней">+</button></div>
-          </fieldset>
-          <fieldset><legend>Приёмов пищи в день</legend>
-            <div class="seg">
-              <label><input type="radio" name="meals" value="3"><span>3</span></label>
-              <label><input type="radio" name="meals" value="4" checked><span>4</span></label>
-              <label><input type="radio" name="meals" value="5"><span>5</span></label>
-            </div>
-          </fieldset>
-          <label class="f">Готовок в день
-            <select id="cooks" name="cooks"></select>
-          </label>
-          <p id="cookHint" class="muted small" style="margin-top:-.4rem"></p>
-          <p class="err" role="alert"></p>
-          <button class="btn" type="submit">Составить план</button>
-        </form>
-      </section>
-      <section class="card">
-        <h2>Мои планы</h2>
-        <ul id="plans" class="plans"></ul>
-      </section>
-    </aside>
-    <section id="result" aria-live="polite"></section>
-  </div>
+
+  <main class="wrap">
+    <section id="view-plan" class="layout">
+      <aside>
+        <section class="card">
+          <h2>Новый план</h2>
+          <form id="gen" class="stack" style="margin-top:1rem" novalidate>
+            <fieldset><legend>Для кого</legend>
+              <div class="seg">
+                <label><input type="radio" name="who" value="me" checked><span>Для меня</span></label>
+                <label><input type="radio" name="who" value="family"><span>Для семьи</span></label>
+              </div>
+            </fieldset>
+            <fieldset><legend>Сколько дней</legend>
+              <div class="step"><button type="button" id="dec" aria-label="Меньше дней">−</button><output id="days" aria-live="polite">3</output><button type="button" id="inc" aria-label="Больше дней">+</button></div>
+            </fieldset>
+            <fieldset><legend>Приёмов пищи в день</legend>
+              <div class="seg">
+                <label><input type="radio" name="meals" value="3"><span>3</span></label>
+                <label><input type="radio" name="meals" value="4" checked><span>4</span></label>
+                <label><input type="radio" name="meals" value="5"><span>5</span></label>
+              </div>
+            </fieldset>
+            <label class="f">Готовок в день
+              <select id="cooks" name="cooks"></select>
+            </label>
+            <p id="cookHint" class="muted small" style="margin-top:-.4rem"></p>
+            <p class="err" role="alert"></p>
+            <button class="btn" type="submit">Составить план</button>
+          </form>
+        </section>
+      </aside>
+      <section id="result" aria-live="polite"></section>
+    </section>
+
+    <section id="view-plans" hidden>
+      <div class="page-head"><h2>Мои планы</h2><p class="muted small">Откройте сохранённый план, чтобы посмотреть блюда и корзину продуктов.</p></div>
+      <ul id="plans" class="plans"></ul>
+    </section>
+
+    <section id="view-family" class="narrow" hidden>
+      <div class="card" id="family">
+        <h2>Семья</h2>
+        <div id="familyBody"></div>
+      </div>
+    </section>
+
+    <section id="view-profile" class="narrow" hidden>
+      <div class="card prof">
+        <span class="ava big" id="avaBig"></span>
+        <div><h2 id="pname"></h2><p class="muted" id="pmail"></p></div>
+        <button class="btn ghost" id="editBtn" type="button" style="margin-left:auto">Редактировать</button>
+      </div>
+      <div class="stats" id="profile"></div>
+      <div id="profileEdit"></div>
+      <button class="btn ghost" id="logout" type="button" style="justify-self:start">Выйти из аккаунта</button>
+    </section>
+  </main>
 </div>
 <div id="toast" role="status" aria-live="polite"></div>
 
@@ -233,7 +304,7 @@ const ORDER = ['BREAKFAST', 'SNACK', 'LUNCH', 'DINNER', 'SECOND_SNACK'];
 const MEAL = {BREAKFAST: 'Завтрак', SNACK: 'Перекус', LUNCH: 'Обед', DINNER: 'Ужин', SECOND_SNACK: 'Поздний перекус'};
 const GOAL = {WEIGHT_LOSS: 'Похудеть', MAINTENANCE: 'Держать вес', WEIGHT_GAIN: 'Набрать'};
 const ACT = {LOW: 'Низкая', MODERATE: 'Средняя', HIGH: 'Высокая', VERY_HIGH: 'Очень высокая'};
-const state = {profile: null, plan: null, basket: null, dishes: new Map(), day: 1, days: 3};
+const state = {profile: null, plan: null, basket: null, family: null, dishes: new Map(), day: 1, days: 3};
 const store = {
   get: k => { try { return localStorage.getItem(k); } catch { return null; } },
   set: (k, v) => { try { localStorage.setItem(k, v); } catch {} },
@@ -257,7 +328,7 @@ function explain(status, d) {
   if (m) return `В каталоге нет блюд для приёма «${MEAL[m[1]] || m[1]}». Добавьте такие блюда и повторите.`;
   const nm = /No dishes suitable for all meal types \[(.+)\]/.exec(detail);
   if (nm) return `Нет блюд, подходящих сразу для приёмов: ${nm[1].split(',').map(s => MEAL[s.trim()] || s.trim()).join(', ')}. Уменьшите число готовок или добавьте блюдам смежные типы.`;
-  if (status === 400 && /готовок/.test(detail)) return detail;
+  if (status === 400 && /готовок|семь|заполнен/.test(detail)) return detail;
   if (status === 400) return 'Проверьте введённые данные: все поля должны быть заполнены корректно.';
   if (status === 404) return 'Не найдено.';
   if (status === 409) return /email/i.test(detail) ? 'Этот email уже зарегистрирован. Перейдите на вкладку «Вход».' : 'Запись не сохранена: база данных отклонила данные.';
@@ -302,16 +373,101 @@ function tab(reg) {
 $('#tab-reg').onclick = () => tab(true);
 $('#tab-login').onclick = () => tab(false);
 
+/* разделы */
+function showView(name) {
+  for (const v of ['plan', 'plans', 'family', 'profile']) $('#view-' + v).hidden = v !== name;
+  document.querySelectorAll('.nav button').forEach(b => b.setAttribute('aria-current', b.dataset.view === name));
+  const el = $('#view-' + name);
+  el.classList.remove('view-in'); void el.offsetWidth; el.classList.add('view-in');
+  window.scrollTo({top: 0});
+}
+document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
+
+/* профиль */
+const ACT_DESC = {LOW: 'Низкая: тренировки 1–3 раза в неделю', MODERATE: 'Средняя: 3–5 раз в неделю',
+  HIGH: 'Высокая: 6–7 раз в неделю', VERY_HIGH: 'Очень высокая: тяжёлый труд или две тренировки в день'};
+
+function renderProfile(p) {
+  closeEdit();
+  $('#who').textContent = p.firstName;
+  $('#ava').textContent = $('#avaBig').textContent = ((p.firstName || '?')[0] + ((p.lastName || '')[0] || '')).toUpperCase();
+  $('#pname').textContent = `${p.firstName} ${p.lastName}`;
+  $('#pmail').textContent = p.email;
+  $('#profile').replaceChildren(...[
+    ['Возраст', `${p.age} лет`], ['Пол', {MALE: 'Мужской', FEMALE: 'Женский'}[p.gender] || 'не указан'],
+    ['Рост', `${fmt.format(p.height)} см`], ['Вес', `${fmt1.format(p.weight)} кг`],
+    ['Активность', ACT[p.activityLevel] || '—'], ['Цель', GOAL[p.goal] || '—']
+  ].map(([k, v]) => h('div', {class: 'tile'}, h('span', {}, k), h('strong', {}, v))));
+}
+
+function closeEdit() {
+  $('#profileEdit').replaceChildren();
+  $('#profile').hidden = false; $('#editBtn').hidden = false; $('#logout').hidden = false;
+}
+
+function openEdit() {
+  const p = state.profile, today = new Date().toISOString().slice(0, 10);
+  const field = (label, input) => h('label', {class: 'f'}, label, input);
+  const input = (type, name, value, extra = {}) => h('input', {type, name, value: value ?? '', ...extra});
+  const seg = (name, options, current) => h('div', {class: 'seg'}, options.map(([v, t]) => {
+    const r = h('input', {type: 'radio', name, value: v}); r.checked = v === current;
+    return h('label', {}, r, h('span', {}, t));
+  }));
+  const act = h('select', {name: 'activityLevel'}, Object.entries(ACT_DESC).map(([v, t]) => h('option', {value: v}, t)));
+  act.value = p.activityLevel || 'MODERATE';
+
+  const form = h('form', {class: 'card stack', novalidate: ''},
+    h('h2', {}, 'Редактирование профиля'),
+    h('div', {class: 'two'}, field('Имя', input('text', 'firstName', p.firstName, {maxlength: '100'})),
+      field('Фамилия', input('text', 'lastName', p.lastName, {maxlength: '100'}))),
+    field('Email', input('email', 'email', p.email, {maxlength: '255'})),
+    h('div', {class: 'two'}, field('Рост, см', input('number', 'height', p.height, {min: '100', max: '250', step: '0.1'})),
+      field('Вес, кг', input('number', 'weight', p.weight, {min: '30', max: '300', step: '0.1'}))),
+    field('Дата рождения', input('date', 'birthday', p.birthday, {max: today})),
+    h('fieldset', {}, h('legend', {}, 'Пол'), seg('gender', [['MALE', 'Мужской'], ['FEMALE', 'Женский']], p.gender)),
+    field('Активность', act),
+    h('fieldset', {}, h('legend', {}, 'Цель'),
+      seg('goal', [['WEIGHT_LOSS', 'Похудеть'], ['MAINTENANCE', 'Держать вес'], ['WEIGHT_GAIN', 'Набрать']], p.goal)),
+    h('p', {class: 'err', role: 'alert'}),
+    h('div', {class: 'actions'},
+      h('button', {type: 'submit', class: 'btn'}, 'Сохранить'),
+      h('button', {type: 'button', class: 'btn ghost', onclick: closeEdit}, 'Отмена')));
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const fd = new FormData(form), err = form.querySelector('.err'), btn = form.querySelector('button[type=submit]');
+    const body = {firstName: String(fd.get('firstName')).trim(), lastName: String(fd.get('lastName')).trim(),
+      email: String(fd.get('email')).trim(), height: +fd.get('height'), weight: +fd.get('weight'),
+      birthday: fd.get('birthday'), gender: fd.get('gender'), activityLevel: fd.get('activityLevel'), goal: fd.get('goal')};
+    err.textContent = '';
+    if (!body.firstName || !body.lastName) { err.textContent = 'Укажите имя и фамилию.'; return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) { err.textContent = 'Укажите корректный email.'; return; }
+    if (!(body.height > 0 && body.weight > 0 && body.birthday)) { err.textContent = 'Заполните рост, вес и дату рождения.'; return; }
+    if (new Date(body.birthday) >= new Date()) { err.textContent = 'Дата рождения должна быть в прошлом.'; return; }
+    if (!body.gender || !body.goal) { err.textContent = 'Выберите пол и цель.'; return; }
+    btn.disabled = true;
+    try {
+      const changes = Object.fromEntries(Object.entries(body).filter(([k, v]) => v !== p[k]));
+      if (!Object.keys(changes).length) { closeEdit(); toast('Изменений нет.'); return; }
+      state.profile = await api('/api/profiles/' + p.id, {method: 'PATCH', body: JSON.stringify(changes)});
+      renderProfile(state.profile);
+      toast('Профиль сохранён.');
+    } catch (ex) { err.textContent = ex.status === 409 ? 'Этот email уже занят другим профилем.' : ex.message; }
+    finally { btn.disabled = false; }
+  });
+
+  $('#profile').hidden = true; $('#editBtn').hidden = true; $('#logout').hidden = true;
+  $('#profileEdit').replaceChildren(form);
+  form.querySelector('input').focus();
+}
+$('#editBtn').onclick = openEdit;
+
 /* вход и выход */
 function enter(p) {
   state.profile = p; store.set('pc.id', p.id);
-  $('#who').textContent = `${p.firstName} ${p.lastName}`;
-  $('#profile').replaceChildren(...[
-    ['Имя', `${p.firstName} ${p.lastName}`], ['Email', p.email], ['Возраст', `${p.age} лет`], ['Рост', `${fmt.format(p.height)} см`], ['Вес', `${fmt1.format(p.weight)} кг`],
-    ['Активность', ACT[p.activityLevel] || '—'], ['Цель', GOAL[p.goal] || '—']
-  ].flatMap(([k, v]) => [h('dt', {}, k), h('dd', {}, v)]));
+  renderProfile(p);
   $('#auth').hidden = true; $('#app').hidden = false;
-  state.plan = null; renderResult(); loadPlans();
+  state.plan = null; renderResult(); loadPlans(); loadFamily(); showView('plan');
 }
 $('#logout').onclick = () => { store.del('pc.id'); state.profile = null; $('#app').hidden = true; $('#auth').hidden = false; tab(false); };
 
@@ -351,7 +507,7 @@ $('#gen').addEventListener('submit', e => {
   e.preventDefault();
   const f = e.target;
   run(f, async () => {
-    const q = new URLSearchParams({profileId: state.profile.id, days: state.days, mealsPerDay: new FormData(f).get('meals'), cookingsPerDay: $('#cooks').value});
+    const q = new URLSearchParams({profileId: state.profile.id, days: state.days, mealsPerDay: new FormData(f).get('meals'), cookingsPerDay: $('#cooks').value, forFamily: new FormData(f).get('who') === 'family'});
     await showPlan(await api('/api/meal-plans/generate?' + q, {method: 'POST'}));
   });
 });
@@ -361,7 +517,7 @@ async function showPlan(plan) {
   const ids = [...new Set(plan.meals.map(m => m.dishId))];
   const dishes = await Promise.all(ids.map(id => api('/api/dishes/' + id).catch(() => null)));
   state.dishes = new Map(dishes.filter(Boolean).map(d => [d.id, d]));
-  state.plan = plan; state.basket = null; state.day = 1; renderResult(); loadPlans(); loadBasket();
+  state.plan = plan; state.basket = null; state.day = 1; renderResult(); loadPlans(); loadBasket(); showView('plan');
 }
 
 async function loadPlans() {
@@ -413,8 +569,10 @@ function renderResult() {
     const d = state.dishes.get(m.dishId), k = kcal(m);
     const shared = meals.filter(x => x !== m && x.dishId === m.dishId).map(x => MEAL[x.mealType] || x.mealType);
     return h('details', {class: 'meal'},
-      h('summary', {}, h('span', {class: 'kind'}, MEAL[m.mealType] || m.mealType), h('span', {class: 'dish'}, m.dishName, shared.length ? h('small', {class: 'with'}, `готовится один раз вместе: ${shared.join(', ')}`) : null),
-        h('span', {class: 'kcal'}, k == null ? '—' : `${fmt.format(k)} ккал`, h('small', {}, `порция ×${fmt1.format(m.portion)}`))),
+      h('summary', {}, h('span', {class: 'kind', 'data-t': m.mealType}, MEAL[m.mealType] || m.mealType), h('span', {class: 'dish'}, m.dishName, shared.length ? h('small', {class: 'with'}, `готовится один раз вместе: ${shared.join(', ')}`) : null),
+        h('span', {class: 'kcal'}, k == null ? '—' : `${fmt.format(k)} ккал`, h('small', {}, `${state.plan.familyId ? 'всего' : 'порция'} ×${fmt1.format(m.portion)}`))),
+      (m.members || []).length > 1 ? h('p', {class: 'who'}, 'Порции: ' + m.members.map(x =>
+        `${x.name} ×${fmt1.format(x.portion)}${d ? ` (${fmt.format(d.calories * x.portion)} ккал)` : ''}`).join('; ')) : null,
       d ? h('ul', {class: 'ing'}, d.ingredients.map(i =>
         h('li', {}, h('span', {}, i.productName), h('span', {}, `${fmt.format(i.amount * m.portion)} г`)))) : null);
   });
@@ -422,11 +580,11 @@ function renderResult() {
   box.replaceChildren(
     h('div', {class: 'head'},
       h('div', {}, h('h2', {}, `План на ${plan.days} ${plural(plan.days, 'день', 'дня', 'дней')}`),
-        h('p', {class: 'muted small'}, `План № ${plan.id}, ${perDay} ${plural(perDay, 'приём', 'приёма', 'приёмов')} пищи в день`))),
+        h('p', {class: 'muted small'}, `План № ${plan.id}, ${perDay} ${plural(perDay, 'приём', 'приёма', 'приёмов')} пищи в день${plan.familyId ? ', на семью' : ''}`))),
     h('div', {class: 'days'}, Array.from({length: plan.days}, (_, i) => i + 1).map(n =>
       h('button', {type: 'button', 'aria-pressed': n === state.day, onclick: () => { state.day = n; renderResult(); }}, `День ${n}`))),
     h('section', {class: 'card'}, rows,
-      h('div', {class: 'total'}, h('span', {}, `Итого за день, готовок: ${cooks}`), h('span', {}, total ? `${fmt.format(total)} ккал` : '—'))),
+      h('div', {class: 'total'}, h('span', {}, `Итого за день${state.plan.familyId ? ' на всех' : ''}, готовок: ${cooks}`), h('span', {}, total ? `${fmt.format(total)} ккал` : '—'))),
     basketCard()
   );
 }
@@ -502,6 +660,67 @@ function basketCard() {
 function plural(n, a, b, c) {
   const m10 = n % 10, m100 = n % 100;
   return m10 === 1 && m100 !== 11 ? a : (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? b : c);
+}
+
+/* семья */
+async function loadFamily() {
+  state.family = null;
+  if (state.profile.familyId) {
+    try { state.family = await api('/api/families/' + state.profile.familyId); } catch (e) { toast(e.message); }
+  }
+  renderFamily();
+}
+
+function renderFamily() {
+  const box = $('#familyBody'), f = state.family;
+  document.querySelector('input[name=who][value=family]').disabled = !f;
+  if (!f) document.querySelector('input[name=who][value=me]').checked = true;
+  if (!f) {
+    const name = h('input', {type: 'text', placeholder: 'Например, Ивановы', maxlength: '100', 'aria-label': 'Название семьи'});
+    box.replaceChildren(
+      h('p', {class: 'muted small'}, 'Создайте семью и добавьте близких по email: план и корзину можно считать на всех сразу.'),
+      h('div', {class: 'inline'}, name, h('button', {type: 'button', class: 'btn', onclick: () => createFamily(name.value)}, 'Создать')));
+    return;
+  }
+  const email = h('input', {type: 'email', placeholder: 'Email близкого', 'aria-label': 'Email участника'});
+  box.replaceChildren(
+    h('p', {class: 'fam'}, f.name),
+    h('ul', {class: 'members'}, f.members.map(m => {
+      const self = m.id === state.profile.id;
+      return h('li', {}, h('span', {}, `${m.firstName} ${m.lastName}${self ? ' (вы)' : ''}`, h('small', {class: 'muted'}, m.email)),
+        h('button', {type: 'button', class: 'x2', title: self ? 'Выйти из семьи' : 'Убрать из семьи',
+          'aria-label': self ? 'Выйти из семьи' : `Убрать ${m.firstName} из семьи`, onclick: () => leaveFamily(m.id)}, '×'));
+    })),
+    h('div', {class: 'inline'}, email, h('button', {type: 'button', class: 'btn ghost', onclick: () => addMember(email.value)}, 'Добавить')));
+}
+
+async function createFamily(name) {
+  name = name.trim();
+  if (!name) { toast('Введите название семьи.'); return; }
+  try {
+    state.family = await api('/api/families', {method: 'POST', body: JSON.stringify({name, profileId: state.profile.id})});
+    state.profile.familyId = state.family.id; renderFamily(); toast('Семья создана.');
+  } catch (e) { toast(e.message); }
+}
+
+async function addMember(email) {
+  email = email.trim();
+  if (!email) return;
+  try {
+    state.family = await api(`/api/families/${state.family.id}/members`, {method: 'POST', body: JSON.stringify({email})});
+    renderFamily(); toast('Участник добавлен.');
+  } catch (e) { toast(e.status === 404 ? 'Профиль с таким email не найден: близкий должен сначала зарегистрироваться.' : e.message); }
+}
+
+async function leaveFamily(profileId) {
+  const self = profileId === state.profile.id;
+  if (!confirm(self ? 'Выйти из семьи?' : 'Убрать участника из семьи?')) return;
+  try {
+    await api(`/api/families/${state.family.id}/members/${profileId}`, {method: 'DELETE'});
+    if (self || state.family.members.length <= 1) { state.profile.familyId = null; state.family = null; }
+    else state.family = await api('/api/families/' + state.family.id);
+    renderFamily();
+  } catch (e) { toast(e.message); }
 }
 
 /* число готовок */

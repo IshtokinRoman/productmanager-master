@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import ru.productmanager.dto.UserProfileCreateDto;
 import ru.productmanager.dto.UserProfileResponse;
+import ru.productmanager.dto.UserProfilePatchDto;
 import ru.productmanager.model.UserProfile;
 import ru.productmanager.service.UserProfileService;
 
@@ -32,14 +33,21 @@ public class UserProfileController {
         return UserProfileResponse.from(service.getById(id));
     }
 
+    @PatchMapping("/{id}")
+    public UserProfileResponse patch(@PathVariable Long id, @Valid @RequestBody UserProfilePatchDto dto) {
+        return UserProfileResponse.from(service.patch(id, dto));
+    }
+
+    @GetMapping("/by-email")
+    public UserProfileResponse getByEmail(
+            @RequestParam String email
+    ) {
+        return UserProfileResponse.from(service.getByEmail(email));
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         service.deleteUserProfile(id);
-    }
-
-    @GetMapping("/by-email")
-    public UserProfileResponse getByEmail(@RequestParam String email) {
-        return UserProfileResponse.from(service.getByEmail(email));
     }
 }

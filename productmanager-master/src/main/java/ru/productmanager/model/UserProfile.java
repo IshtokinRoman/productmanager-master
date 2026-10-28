@@ -5,6 +5,8 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data
@@ -33,6 +35,17 @@ public class UserProfile {
 
     @Enumerated(EnumType.STRING)
     private Goal goal;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "family_id")
+    private Family family;
+
+    @OneToMany(
+            mappedBy = "userProfile",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<ExcludedProduct> excludedProducts = new ArrayList<>();
 
     @Transient
     public int getAge() {

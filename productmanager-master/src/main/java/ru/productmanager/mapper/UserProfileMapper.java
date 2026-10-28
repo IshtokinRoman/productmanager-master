@@ -18,6 +18,7 @@ public class UserProfileMapper {
         userProfile.setFirstName(createDto.getFirstName());
         userProfile.setLastName(createDto.getLastName());
         userProfile.setEmail(createDto.getEmail());
+        userProfile.setGender(createDto.getGender());
         if (createDto.getGoal() != null) {
             userProfile.setGoal(createDto.getGoal());
         } else {

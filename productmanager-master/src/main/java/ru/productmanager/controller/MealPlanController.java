@@ -26,9 +26,10 @@ public class MealPlanController {
     public ResponseEntity<MealPlanResponse> generate(@RequestParam Long profileId,
                                                      @RequestParam int days,
                                                      @RequestParam int mealsPerDay,
-                                                     @RequestParam(required = false) Integer cookingsPerDay) {
+                                                     @RequestParam(required = false) Integer cookingsPerDay,
+                                                     @RequestParam(defaultValue = "false") boolean forFamily) {
         UserProfile profile = profileService.getById(profileId); // 404, если профиля нет
-        MealPlan plan = service.generateMealPlan(profile, days, mealsPerDay,
+        MealPlan plan = service.generateMealPlan(profile, forFamily, days, mealsPerDay,
                 cookingsPerDay != null ? cookingsPerDay : mealsPerDay);
 
         URI location = ServletUriComponentsBuilder.fromCurrentContextPath()

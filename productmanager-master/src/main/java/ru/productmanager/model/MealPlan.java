@@ -15,9 +15,15 @@ public class MealPlan {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // кто составил план
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_id", nullable = false)
     private UserProfile owner;
+
+    // если план составлен на семью, здесь семья, иначе null (план только для владельца)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "family_id")
+    private Family family;
 
     private int days;
 
@@ -26,5 +32,6 @@ public class MealPlan {
 
     public void addMeal(Meal meal) {
         meals.add(meal);
+        meal.setMealPlan(this);
     }
 }

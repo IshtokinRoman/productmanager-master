@@ -1,5 +1,6 @@
 package ru.productmanager.repo;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -7,6 +8,7 @@ import ru.productmanager.dto.MealPlanSummary;
 import ru.productmanager.model.MealPlan;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface MealPlanRepository extends JpaRepository<MealPlan, Long> {
     @Query("""
@@ -17,4 +19,7 @@ public interface MealPlanRepository extends JpaRepository<MealPlan, Long> {
         order by p.id desc
         """)
     List<MealPlanSummary> findSummariesByOwnerId(@Param("ownerId") Long ownerId);
+
+    @EntityGraph(attributePaths = {"meals", "meals.dish", "meals.memberPortions", "meals.memberPortions.member"})
+    Optional<MealPlan> findById(Long id);
 }
