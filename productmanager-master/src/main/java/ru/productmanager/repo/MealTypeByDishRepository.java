@@ -8,6 +8,7 @@ import ru.productmanager.model.MealType;
 import ru.productmanager.model.MealTypeByDish;
 
 import java.util.List;
+import java.util.Set;
 
 public interface MealTypeByDishRepository extends JpaRepository<MealTypeByDish, Long> {
     List<MealTypeByDish> findByMealType(MealType type);
@@ -35,6 +36,6 @@ public interface MealTypeByDishRepository extends JpaRepository<MealTypeByDish, 
     """)
     List<Dish> findDishesByMealTypes(
             @Param("mealTypes") List<MealType> mealTypes,
-            @Param("excludeProductIds") List<Long> excludeProductIds
+            @Param("excludeProductIds") Set<Long> excludeProductIds
     );
 }

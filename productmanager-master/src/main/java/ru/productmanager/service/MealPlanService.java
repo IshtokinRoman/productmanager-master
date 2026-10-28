@@ -62,12 +62,20 @@ public class MealPlanService {
 
         Family family = null;
         List<UserProfile> members = List.of(owner);
+        Set<Long> excludedIds = new HashSet<>(Set.of(-1L));
         if (forFamily) {
             family = owner.getFamily();
             if (family == null) {
                 throw new IllegalArgumentException("Профиль не состоит в семье");
             }
             members = userProfileRepository.findByFamilyIdOrderById(family.getId());
+        }
+
+        //оптимизировать это запросом с репы excluded product repository
+        for (UserProfile profile : members) {
+            for (ExcludedProduct excludedProduct : profile.getExcludedProducts()) {
+                excludedIds.add(excludedProduct.getProduct().getId());
+            }
         }
 
         List<Double> dailyCalories = members.stream().map(this::dailyCaloriesOf).toList();
@@ -86,9 +94,6 @@ public class MealPlanService {
 
         // кандидатов для каждой готовки грузим один раз, до цикла по дням
         List<List<Dish>> candidatesByGroup = new ArrayList<>();
-        List<Long> excludedIds = requester.getExcludedProducts().stream()
-                .map(excludedProduct -> excludedProduct.getProduct().getId())
-                .toList();
         for (List<MealType> group : groups) {
             List<Dish> candidates = mealTypeByDishRepository.findDishesByMealTypes(group, excludedIds);
             if (candidates.isEmpty()) {

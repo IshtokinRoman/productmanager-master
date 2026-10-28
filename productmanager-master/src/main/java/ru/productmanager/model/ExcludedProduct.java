@@ -7,6 +7,7 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
+@Table(name = "exclude_product")
 public class ExcludedProduct {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

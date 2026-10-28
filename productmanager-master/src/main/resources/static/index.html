@@ -135,6 +135,10 @@ ul.ing li{display:flex;justify-content:space-between;gap:1rem;max-width:24rem}
 .seg input:disabled+span{opacity:.4;cursor:not-allowed}
 .who{padding:0 .25rem .7rem 9.25rem;font-size:.9rem}
 @media (max-width:860px){.who{padding-left:.25rem}}
+.xlist{list-style:none;display:flex;flex-wrap:wrap;gap:.5rem;margin:.9rem 0 0;padding:0}
+.xchip{display:flex;align-items:center;gap:.2rem;padding:.3rem .35rem .3rem .85rem;border-radius:999px;background:#fde5ec;color:#8a2147;font-weight:500;font-size:.9rem}
+.xchip button{border:0;background:none;color:inherit;font-size:1.15rem;line-height:1;padding:0 .35rem;border-radius:50%}
+.xchip button:hover{background:#f8c9d7}
 .actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem}
 #toast{position:fixed;left:50%;bottom:1.5rem;transform:translate(-50%,2rem);background:var(--ink);color:#fff;padding:.8rem 1.2rem;border-radius:12px;max-width:min(90vw,32rem);opacity:0;pointer-events:none;transition:.25s;z-index:9}
 #toast.on{opacity:1;transform:translate(-50%,0)}
@@ -289,10 +293,20 @@ ul.ing li{display:flex;justify-content:space-between;gap:1rem;max-width:24rem}
       </div>
       <div class="stats" id="profile"></div>
       <div id="profileEdit"></div>
+      <div class="card" id="excl">
+        <h2>Исключённые продукты</h2>
+        <p class="muted small" style="margin-top:.4rem">Блюда с этими продуктами не попадут в план. В плане на семью учитываются исключения всех участников.</p>
+        <div class="inline">
+          <input type="text" id="exclInput" list="prods" placeholder="Начните вводить продукт" autocomplete="off" aria-label="Продукт для исключения">
+          <button type="button" class="btn ghost" id="exclAdd">Добавить</button>
+        </div>
+        <ul class="xlist" id="exclList"></ul>
+      </div>
       <button class="btn ghost" id="logout" type="button" style="justify-self:start">Выйти из аккаунта</button>
     </section>
   </main>
 </div>
+<datalist id="prods"></datalist>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -304,7 +318,7 @@ const ORDER = ['BREAKFAST', 'SNACK', 'LUNCH', 'DINNER', 'SECOND_SNACK'];
 const MEAL = {BREAKFAST: 'Завтрак', SNACK: 'Перекус', LUNCH: 'Обед', DINNER: 'Ужин', SECOND_SNACK: 'Поздний перекус'};
 const GOAL = {WEIGHT_LOSS: 'Похудеть', MAINTENANCE: 'Держать вес', WEIGHT_GAIN: 'Набрать'};
 const ACT = {LOW: 'Низкая', MODERATE: 'Средняя', HIGH: 'Высокая', VERY_HIGH: 'Очень высокая'};
-const state = {profile: null, plan: null, basket: null, family: null, dishes: new Map(), day: 1, days: 3};
+const state = {profile: null, plan: null, basket: null, family: null, excluded: [], dishes: new Map(), day: 1, days: 3};
 const store = {
   get: k => { try { return localStorage.getItem(k); } catch { return null; } },
   set: (k, v) => { try { localStorage.setItem(k, v); } catch {} },
@@ -327,7 +341,7 @@ function explain(status, d) {
   const m = /No dishes for meal type (\w+)/.exec(detail);
   if (m) return `В каталоге нет блюд для приёма «${MEAL[m[1]] || m[1]}». Добавьте такие блюда и повторите.`;
   const nm = /No dishes suitable for all meal types \[(.+)\]/.exec(detail);
-  if (nm) return `Нет блюд, подходящих сразу для приёмов: ${nm[1].split(',').map(s => MEAL[s.trim()] || s.trim()).join(', ')}. Уменьшите число готовок или добавьте блюдам смежные типы.`;
+  if (nm) return `Нет блюд, подходящих сразу для приёмов: ${nm[1].split(',').map(s => MEAL[s.trim()] || s.trim()).join(', ')}. Уменьшите число готовок, проверьте исключённые продукты в профиле или добавьте блюдам смежные типы.`;
   if (status === 400 && /готовок|семь|заполнен/.test(detail)) return detail;
   if (status === 400) return 'Проверьте введённые данные: все поля должны быть заполнены корректно.';
   if (status === 404) return 'Не найдено.';
@@ -382,6 +396,54 @@ function showView(name) {
   window.scrollTo({top: 0});
 }
 document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
+
+/* исключённые продукты */
+const prodByName = new Map();
+const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+
+async function searchProducts(q) {
+  try {
+    const list = await api('/api/products?q=' + encodeURIComponent(q.trim()));
+    list.forEach(x => prodByName.set(x.name.toLowerCase(), x));
+    $('#prods').replaceChildren(...list.map(x => h('option', {value: x.name})));
+  } catch (e) { toast(e.message); }
+}
+
+async function loadExcluded() {
+  try { state.excluded = await api(`/api/profiles/${state.profile.id}/excluded-products`); }
+  catch (e) { state.excluded = []; toast(e.message); }
+  renderExcluded();
+}
+
+function renderExcluded() {
+  $('#exclList').replaceChildren(...(state.excluded.length
+    ? state.excluded.map(x => h('li', {class: 'xchip'}, x.name,
+        h('button', {type: 'button', title: 'Убрать из исключений', 'aria-label': `Убрать ${x.name} из исключений`,
+          onclick: () => removeExcluded(x)}, '×')))
+    : [h('li', {class: 'muted small'}, 'Исключений нет.')]));
+}
+
+async function addExcluded() {
+  const input = $('#exclInput'), product = prodByName.get(input.value.trim().toLowerCase());
+  if (!product) { toast('Выберите продукт из списка.'); return; }
+  try {
+    state.excluded = await api(`/api/profiles/${state.profile.id}/excluded-products`,
+      {method: 'POST', body: JSON.stringify({productId: product.id})});
+    input.value = ''; renderExcluded(); toast(`«${product.name}» исключён из рациона.`);
+  } catch (e) { toast(e.status === 409 ? 'Этот продукт уже в исключениях.' : e.message); }
+}
+
+async function removeExcluded(x) {
+  try {
+    await api(`/api/profiles/${state.profile.id}/excluded-products/${x.productId}`, {method: 'DELETE'});
+    state.excluded = state.excluded.filter(e => e.productId !== x.productId); renderExcluded();
+  } catch (e) { toast(e.message); }
+}
+
+$('#exclAdd').onclick = addExcluded;
+$('#exclInput').addEventListener('input', debounce(() => searchProducts($('#exclInput').value), 250));
+$('#exclInput').addEventListener('focus', () => { if (!prodByName.size) searchProducts(''); });
+$('#exclInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addExcluded(); } });
 
 /* профиль */
 const ACT_DESC = {LOW: 'Низкая: тренировки 1–3 раза в неделю', MODERATE: 'Средняя: 3–5 раз в неделю',
@@ -467,7 +529,7 @@ function enter(p) {
   state.profile = p; store.set('pc.id', p.id);
   renderProfile(p);
   $('#auth').hidden = true; $('#app').hidden = false;
-  state.plan = null; renderResult(); loadPlans(); loadFamily(); showView('plan');
+  state.plan = null; renderResult(); loadPlans(); loadFamily(); loadExcluded(); showView('plan');
 }
 $('#logout').onclick = () => { store.del('pc.id'); state.profile = null; $('#app').hidden = true; $('#auth').hidden = false; tab(false); };
 
