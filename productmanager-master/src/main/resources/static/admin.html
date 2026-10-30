@@ -27,7 +27,8 @@ label.f,fieldset{display:grid;gap:.35rem;font-weight:500;font-size:.9rem;border:
 legend{padding:0;margin-bottom:.35rem;font-weight:500;font-size:.9rem}
 input[type=text],input[type=number],input[type=password],textarea{width:100%;font:inherit;color:inherit;background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:.65rem .8rem}
 textarea{resize:vertical;min-height:4.5rem}
-input:focus,textarea:focus{border-color:var(--ink);outline:none;box-shadow:0 0 0 3px #d4f04f99}
+select{width:100%;font:inherit;color:inherit;background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:.65rem .8rem}
+input:focus,textarea:focus,select:focus{border-color:var(--ink);outline:none;box-shadow:0 0 0 3px #d4f04f99}
 .chips{display:flex;flex-wrap:wrap;gap:.5rem}
 .chip{position:relative}.chip input{position:absolute;opacity:0;inset:0}
 .chip span{display:block;padding:.45rem .95rem;border:1.5px solid var(--line);border-radius:999px;font-weight:500;color:var(--muted);cursor:pointer}
@@ -48,6 +49,12 @@ input:focus,textarea:focus{border-color:var(--ink);outline:none;box-shadow:0 0 0
 .added li{display:flex;justify-content:space-between;gap:1rem;border-top:1px solid var(--line);padding-top:.3rem}
 #toast{position:fixed;left:50%;bottom:1.5rem;transform:translate(-50%,2rem);background:var(--ink);color:#fff;padding:.8rem 1.2rem;border-radius:12px;max-width:min(90vw,32rem);opacity:0;pointer-events:none;transition:.25s;z-index:9}
 #toast.on{opacity:1;transform:translate(-50%,0)}
+.link{border:0;background:none;padding:0;color:var(--ink);font:600 .85rem var(--body);text-decoration:underline;text-decoration-color:var(--radish);text-underline-offset:3px}
+.link:hover{color:var(--radish)}
+.acts{display:flex;gap:.6rem}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+dialog{border:0;border-radius:18px;padding:1.4rem;width:min(92vw,30rem);color:var(--ink)}
+dialog::backdrop{background:#1d214599}
 @media (max-width:860px){.layout{grid-template-columns:1fr}.sum{position:static}.two{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -55,7 +62,10 @@ input:focus,textarea:focus{border-color:var(--ink);outline:none;box-shadow:0 0 0
 <body>
 <header class="top">
   <div class="logo"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="16" fill="#d4f04f"/><path d="M9 22c0-8 4-13 14-13 0 9-5 13-14 13zM9 22l8-8" fill="none" stroke="#1d2145" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Админка: блюда</div>
-  <a class="btn ghost" href="/">К сайту</a>
+  <div class="acts">
+    <button type="button" class="btn ghost" id="newProd" hidden>+ Продукт</button>
+    <a class="btn ghost" href="/">К сайту</a>
+  </div>
 </header>
 
 <main>
@@ -98,6 +108,25 @@ input:focus,textarea:focus{border-color:var(--ink);outline:none;box-shadow:0 0 0
     </aside>
   </div>
 </main>
+<dialog id="pdlg" aria-labelledby="pt">
+  <form id="pform" class="stack" novalidate>
+    <h2 id="pt">Новый продукт</h2>
+    <label class="f">Название<input type="text" id="pname" maxlength="255" required></label>
+    <label class="f">Категория<select id="pcat" required></select></label>
+    <label class="f">Калории на 100 г, ккал<input type="number" id="pkcal" min="0" step="0.1" inputmode="decimal"></label>
+    <div class="three">
+      <label class="f">Белки, г<input type="number" id="pprot" min="0" step="0.1" inputmode="decimal"></label>
+      <label class="f">Жиры, г<input type="number" id="pfat" min="0" step="0.1" inputmode="decimal"></label>
+      <label class="f">Углеводы, г<input type="number" id="pcarb" min="0" step="0.1" inputmode="decimal"></label>
+    </div>
+    <p class="muted small">Все значения указываются на 100 г продукта. Если калории не заполнить, они посчитаются из белков, жиров и углеводов.</p>
+    <p class="err" id="perr" role="alert"></p>
+    <div class="two">
+      <button type="button" class="btn ghost" id="pcancel">Отмена</button>
+      <button class="btn" type="submit" id="psave">Сохранить продукт</button>
+    </div>
+  </form>
+</dialog>
 <datalist id="prods"></datalist>
 <div id="toast" role="status" aria-live="polite"></div>
 
@@ -147,10 +176,15 @@ function toast(msg) {
 
 /* вход по ключу */
 async function start() {
-  try { await api('/api/admin/ping'); $('#gate').hidden = true; $('#panel').hidden = false; searchProducts(''); }
-  catch (e) {
-    if (e.status === 401) { $('#panel').hidden = true; $('#gate').hidden = false; $('#gateErr').textContent = adminKey ? e.message : ''; }
-    else toast(e.message);
+  try {
+    await api('/api/admin/ping');
+    $('#gate').hidden = true; $('#panel').hidden = false; $('#newProd').hidden = false;
+    searchProducts('');
+  } catch (e) {
+    if (e.status === 401) {
+      $('#panel').hidden = true; $('#newProd').hidden = true; $('#gate').hidden = false;
+      $('#gateErr').textContent = adminKey ? e.message : '';
+    } else toast(e.message);
   }
 }
 $('#gateForm').addEventListener('submit', e => {
@@ -178,14 +212,18 @@ function addRow() {
   const info = h('small', {class: 'muted'});
   const del = h('button', {type: 'button', class: 'x', 'aria-label': 'Убрать ингредиент', title: 'Убрать'}, '×');
   const row = h('div', {class: 'ing'}, h('div', {}, name, info), grams, del);
-  row.ref = {name, grams, info};
-  name.addEventListener('input', debounce(() => searchProducts(name.value), 250));
-  name.addEventListener('input', () => { info.textContent = ''; recalc(); });
-  name.addEventListener('change', () => {
-    const p = productOf(row);
-    info.textContent = p ? `${fmt.format(p.calories)} ккал на 100 г` : 'Выберите продукт из списка';
+  const refresh = () => {
+    const p = productOf(row), q = name.value.trim();
+    info.replaceChildren();
+    if (p) info.textContent = `${fmt.format(p.calories)} ккал на 100 г`;
+    else if (q) info.append(h('button', {type: 'button', class: 'link'}, `+ Добавить «${q}» как новый продукт`));
     recalc();
-  });
+  };
+  row.ref = {name, grams, info, refresh};
+  name.addEventListener('input', () => { info.replaceChildren(); recalc(); });
+  name.addEventListener('input', debounce(async () => { await searchProducts(name.value); refresh(); }, 250));
+  name.addEventListener('change', refresh);
+  info.addEventListener('click', e => { if (e.target.closest('.link')) openProduct(name.value.trim(), row); });
   grams.addEventListener('input', recalc);
   del.addEventListener('click', () => { row.remove(); recalc(); });
   $('#ings').append(row);
@@ -206,7 +244,59 @@ function recalc() {
   $('#c').textContent = `${fmt1.format(c)} г`; $('#w').textContent = `${fmt.format(w)} г`;
 }
 
-/* форма */
+/* новый продукт */
+const dlg = $('#pdlg');
+let target = null;   // строка ингредиента, из которой открыли окно (или null)
+function openProduct(name = '', row = null) {
+  target = row; $('#pform').reset(); $('#perr').textContent = ''; $('#pname').value = name;
+  dlg.showModal(); (name ? $('#pcat') : $('#pname')).focus();
+}
+$('#newProd').onclick = () => openProduct();
+$('#pcancel').onclick = () => dlg.close();
+
+// Формат запроса POST /api/products. Если поля Product называются иначе, поправьте только здесь.
+const buildProduct = (name, category, kcal, p, f, c) => ({name, category, calories: kcal, protein: p, fat: f, carbohydrates: c});
+
+// Значения совпадают с enum ProductCategory
+const CATS = [['MEAT', 'Мясо и птица'], ['FISH', 'Рыба'], ['SEAFOOD', 'Морепродукты'], ['DAIRY', 'Молочные продукты'],
+  ['EGGS', 'Яйца'], ['GRAINS', 'Крупы и злаки'], ['PASTA', 'Макароны'], ['BREAD', 'Хлеб и выпечка'],
+  ['VEGETABLES', 'Овощи'], ['FRUITS', 'Фрукты'], ['BERRIES', 'Ягоды'], ['NUTS', 'Орехи и семена'],
+  ['LEGUMES', 'Бобовые'], ['OIL', 'Масла'], ['SAUCES', 'Соусы и специи'], ['SWEETS', 'Сладости'],
+  ['BEVERAGES', 'Напитки'], ['OTHER', 'Другое']];
+$('#pcat').append(h('option', {value: ''}, 'Выберите категорию'), ...CATS.map(([v, t]) => h('option', {value: v}, t)));
+
+function useProduct(p) {
+  byName.set(p.name.toLowerCase(), p);
+  $('#prods').append(h('option', {value: p.name}));
+  if (target) { target.ref.name.value = p.name; target.ref.refresh(); target.ref.grams.focus(); }
+  dlg.close();
+}
+
+$('#pform').addEventListener('submit', async e => {
+  e.preventDefault();
+  const err = $('#perr'), btn = $('#psave'), name = $('#pname').value.trim();
+  const num = id => +$(id).value || 0;
+  const p = num('#pprot'), f = num('#pfat'), c = num('#pcarb');
+  const kcal = $('#pkcal').value !== '' ? +$('#pkcal').value : Math.round(4 * p + 9 * f + 4 * c);
+  err.textContent = '';
+  if (!name) { err.textContent = 'Укажите название продукта.'; return; }
+  const category = $('#pcat').value;
+  if (!category) { err.textContent = 'Выберите категорию продукта.'; return; }
+  if (!(kcal > 0)) { err.textContent = 'Укажите калории или белки, жиры и углеводы.'; return; }
+  btn.disabled = true;
+  try {
+    const created = await api('/api/products', {method: 'POST', body: JSON.stringify(buildProduct(name, category, kcal, p, f, c))});
+    useProduct(created); toast(`Продукт «${created.name || name}» добавлен.`);
+  } catch (ex) {
+    if (ex.status === 401) { dlg.close(); start(); return; }
+    await searchProducts(name);                       // возможно, такой продукт уже есть
+    const same = byName.get(name.toLowerCase());
+    if (same) { useProduct(same); toast(`Продукт «${same.name}» уже есть в базе, подставлен он.`); }
+    else err.textContent = ex.status === 400 ? 'Проверьте данные: название, категория и калории обязательны.' : ex.message;
+  } finally { btn.disabled = false; }
+});
+
+/* форма блюда */
 $('#types').append(...TYPES.map(([v, t]) =>
   h('label', {class: 'chip'}, h('input', {type: 'checkbox', name: 'type', value: v}), h('span', {}, t))));
 $('#addIng').onclick = () => addRow().ref.name.focus();

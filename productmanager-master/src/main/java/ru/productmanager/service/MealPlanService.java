@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.productmanager.dto.MealPlanSummary;
 import ru.productmanager.exception.NotFoundException;
 import ru.productmanager.model.*;
+import ru.productmanager.repo.ExcludedProductRepository;
 import ru.productmanager.repo.MealPlanRepository;
 import ru.productmanager.repo.MealTypeByDishRepository;
 import ru.productmanager.repo.UserProfileRepository;
@@ -32,6 +33,7 @@ public class MealPlanService {
     private final MealPlanRepository repository;
     private final UserProfileRepository userProfileRepository;
     private final BmrCalculator calculator;
+    private final ExcludedProductRepository excludedProductRepository;
 
     @Transactional(readOnly = true)
     public MealPlan getPlan(Long id) {
@@ -62,7 +64,6 @@ public class MealPlanService {
 
         Family family = null;
         List<UserProfile> members = List.of(owner);
-        Set<Long> excludedIds = new HashSet<>(Set.of(-1L));
         if (forFamily) {
             family = owner.getFamily();
             if (family == null) {
@@ -71,12 +72,11 @@ public class MealPlanService {
             members = userProfileRepository.findByFamilyIdOrderById(family.getId());
         }
 
-        //оптимизировать это запросом с репы excluded product repository
-        for (UserProfile profile : members) {
-            for (ExcludedProduct excludedProduct : profile.getExcludedProducts()) {
-                excludedIds.add(excludedProduct.getProduct().getId());
-            }
-        }
+        List<Long> memberIds = members.stream()
+                .map(UserProfile::getId)
+                .toList();
+        Set<Long> excludedIds = new HashSet<>(Set.of(-1L));
+        excludedIds.addAll(excludedProductRepository.findProductIdsByProfileIds(memberIds));
 
         List<Double> dailyCalories = members.stream().map(this::dailyCaloriesOf).toList();
         double meanDaily = dailyCalories.stream().mapToDouble(Double::doubleValue).average().orElseThrow();
